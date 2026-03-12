@@ -1,14 +1,5 @@
 {
-  "/api/ai/query/route": "app/api/ai/query/route.js",
-  "/api/notifications/route": "app/api/notifications/route.js",
-  "/api/auth/login/route": "app/api/auth/login/route.js",
   "/_not-found/page": "app/_not-found/page.js",
-  "/api/cameras/route": "app/api/cameras/route.js",
-  "/login/page": "app/login/page.js",
-  "/dashboard/page": "app/dashboard/page.js",
-  "/stream/[id]/page": "app/stream/[id]/page.js",
-  "/live-stream/[id]/page": "app/live-stream/[id]/page.js",
-  "/smart-map/page": "app/smart-map/page.js",
-  "/notifications/page": "app/notifications/page.js",
-  "/cameras/page": "app/cameras/page.js"
+  "/page": "app/page.js",
+  "/login/page": "app/login/page.js"
 }

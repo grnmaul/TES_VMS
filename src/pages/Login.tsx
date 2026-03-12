@@ -1,3 +1,6 @@
+// Tambahkan directive agar halaman ini hanya di-render di client
+"use client";
+
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
