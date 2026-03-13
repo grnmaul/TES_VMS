@@ -332,7 +332,7 @@ export default function LandingPage() {
                 </li>
                 <li className="flex gap-3">
                   <span className="text-emerald-500 flex-shrink-0">📞</span>
-                  <span>(0351) 464085</span>
+                  <span>(0351) 467327</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="text-emerald-500 flex-shrink-0">✉️</span>
@@ -340,7 +340,8 @@ export default function LandingPage() {
                 </li>
                 <li className="flex gap-3">
                   <span className="text-emerald-500 flex-shrink-0">⏰</span>
-                  <span>Senin - Jumat, 08:00 - 17:00</span>
+                  <span>Senin - Kamis, 07:00 - 15:30</span>
+                  <span>Jumat, 06:30 - 14:30</span>
                 </li>
               </ul>
             </div>
@@ -367,7 +368,7 @@ export default function LandingPage() {
 
           {/* Copyright */}
           <div className="pt-8 text-center text-sm text-gray-400">
-            <p>Copyright 2026 Kominfo Kota Madiun. All rights reserved.</p>
+            <p>Copyright 2026 Diskominfo Kota Madiun. All rights reserved.</p>
           </div>
         </div>
       </footer>
