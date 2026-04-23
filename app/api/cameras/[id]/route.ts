@@ -1,37 +1,35 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getDatabase } from '@/lib/db';
+import { NextRequest } from 'next/server';
+import { cameraService } from '@/lib/services/cameraService';
+import { ok, withErrorHandler } from '@/lib/http/response';
+import { parseJson, parseParams } from '@/lib/http/request';
 
-export async function PUT(
+export const PUT = withErrorHandler(async (
   req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const id = params.id;
-    const { name, location, ip_address, status } = await req.json();
-    const db = getDatabase();
+  { params }: { params: Promise<{ id: string }> }
+ ) => {
+  const { id } = await parseParams(params);
+  const { name, location, ip_address, stream_url, status } = await parseJson<{
+    name: unknown;
+    location: unknown;
+    ip_address: unknown;
+    stream_url?: unknown;
+    status: unknown;
+  }>(req);
+  const updatedCamera = cameraService.updateCamera(id, {
+    name,
+    location,
+    ip_address,
+    stream_url,
+    status,
+  });
+  return ok(updatedCamera);
+});
 
-    db.prepare(
-      'UPDATE cameras SET name = ?, location = ?, ip_address = ?, status = ? WHERE id = ?'
-    ).run(name, location, ip_address, status, id);
-
-    const updatedCamera = { id: parseInt(id), name, location, ip_address, status };
-    return NextResponse.json(updatedCamera);
-  } catch (error) {
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
-  }
-}
-
-export async function DELETE(
+export const DELETE = withErrorHandler(async (
   req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const id = params.id;
-    const db = getDatabase();
-
-    db.prepare('DELETE FROM cameras WHERE id = ?').run(id);
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
-  }
-}
+  { params }: { params: Promise<{ id: string }> }
+ ) => {
+  const { id } = await parseParams(params);
+  const response = cameraService.deleteCamera(id);
+  return ok(response);
+});

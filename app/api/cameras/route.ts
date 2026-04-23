@@ -1,54 +1,27 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getDatabase } from '@/lib/db';
+import { NextRequest } from 'next/server';
+import { cameraService } from '@/lib/services/cameraService';
+import { ok, withErrorHandler } from '@/lib/http/response';
+import { parseJson } from '@/lib/http/request';
 
-export async function GET(req: NextRequest) {
-  try {
-    const db = getDatabase();
-    const cameras = db.prepare('SELECT * FROM cameras').all();
-    return NextResponse.json(cameras);
-  } catch (error) {
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
-  }
-}
+export const GET = withErrorHandler(async (req: NextRequest) => {
+  const cameras = cameraService.listCameras();
+  return ok(cameras);
+});
 
-export async function PUT(req: NextRequest) {
-  try {
-    const { id, name, location, ip_address, stream_url, status } = await req.json();
-    const db = getDatabase();
-    
-    db.prepare(
-      'UPDATE cameras SET name = ?, location = ?, ip_address = ?, stream_url = ?, status = ? WHERE id = ?'
-    ).run(name, location, ip_address, stream_url || null, status, id);
-
-    const updatedCamera = {
-      id,
-      name,
-      location,
-      ip_address,
-      stream_url: stream_url || null,
-      status,
-    };
-
-    return NextResponse.json(updatedCamera);
-  } catch (error) {
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
-  }
-}
-
-export async function DELETE(req: NextRequest) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get('id');
-    
-    if (!id) {
-      return NextResponse.json({ error: 'Camera ID required' }, { status: 400 });
-    }
-
-    const db = getDatabase();
-    db.prepare('DELETE FROM cameras WHERE id = ?').run(id);
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
-  }
-}
+export const POST = withErrorHandler(async (req: NextRequest) => {
+  const { name, location, ip_address, stream_url, status } = await parseJson<{
+    name: unknown;
+    location: unknown;
+    ip_address: unknown;
+    stream_url?: unknown;
+    status: unknown;
+  }>(req);
+  const newCamera = cameraService.createCamera({
+    name,
+    location,
+    ip_address,
+    stream_url,
+    status,
+  });
+  return ok(newCamera, 201);
+});

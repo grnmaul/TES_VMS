@@ -1,22 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getDatabase } from '@/lib/db';
+import { NextRequest } from 'next/server';
+import { ok, withErrorHandler } from '@/lib/http/response';
+import { parseJson } from '@/lib/http/request';
+import { authService } from '@/lib/services/authService';
 
-export async function POST(req: NextRequest) {
-  try {
-    const { username } = await req.json();
-    const db = getDatabase();
-    
-    const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
-    // In a real app, you would send an email here
-    return NextResponse.json({
-      success: true,
-      message: 'Recovery instructions sent',
-    });
-  } catch (error) {
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
-  }
-}
+export const POST = withErrorHandler(async (req: NextRequest) => {
+  const { username } = await parseJson<{ username: unknown }>(req);
+  const response = authService.forgotPassword(username);
+  return ok(response);
+});

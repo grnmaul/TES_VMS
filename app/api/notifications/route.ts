@@ -1,33 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getDatabase } from '@/lib/db';
+import { NextRequest } from 'next/server';
+import { ok, withErrorHandler } from '@/lib/http/response';
+import { parseJson } from '@/lib/http/request';
+import { notificationService } from '@/lib/services/notificationService';
 
-export async function GET(req: NextRequest) {
-  try {
-    const db = getDatabase();
-    const notifications = db
-      .prepare('SELECT * FROM notifications ORDER BY timestamp DESC')
-      .all();
-    return NextResponse.json(notifications);
-  } catch (error) {
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
-  }
-}
+export const GET = withErrorHandler(async (req: NextRequest) => {
+  const notifications = notificationService.listNotifications();
+  return ok(notifications);
+});
 
-export async function POST(req: NextRequest) {
-  try {
-    const { title, message, type } = await req.json();
-    const db = getDatabase();
-
-    const result = db.prepare(
-      'INSERT INTO notifications (title, message, type) VALUES (?, ?, ?)'
-    ).run(title, message, type);
-
-    const newNotification = db
-      .prepare('SELECT * FROM notifications WHERE id = ?')
-      .get(result.lastInsertRowid);
-
-    return NextResponse.json(newNotification);
-  } catch (error) {
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
-  }
-}
+export const POST = withErrorHandler(async (req: NextRequest) => {
+  const { title, message, type } = await parseJson<{
+    title: unknown;
+    message: unknown;
+    type: unknown;
+  }>(req);
+  const newNotification = notificationService.createNotification(title, message, type);
+  return ok(newNotification);
+});

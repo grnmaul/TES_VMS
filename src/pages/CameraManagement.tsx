@@ -81,9 +81,9 @@ export default function CameraManagement() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const url = editingCamera ? `/api/cameras` : '/api/cameras';
+    const url = editingCamera ? `/api/cameras/${editingCamera.id}` : '/api/cameras';
     const method = editingCamera ? 'PUT' : 'POST';
-    const body = editingCamera ? { ...formData, id: editingCamera.id } : formData;
+    const body = formData;
 
     const res = await fetch(url, {
       method,
@@ -98,7 +98,7 @@ export default function CameraManagement() {
 
   const handleDelete = async (id: number) => {
     if (confirm('Are you sure you want to delete this camera?')) {
-      await fetch(`/api/cameras?id=${id}`, { method: 'DELETE' });
+      await fetch(`/api/cameras/${id}`, { method: 'DELETE' });
     }
   };
 
