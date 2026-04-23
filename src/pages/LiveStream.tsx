@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Play, Maximize2, Share2, RefreshCw, Camera as CameraIcon, MapPin, Info, Menu, X } from 'lucide-react';
 import Hls from 'hls.js';
+import { useRealtime } from '@/src/lib/useRealtime';
 
 interface CameraData {
   id: number;
@@ -35,6 +36,14 @@ export default function LiveStream() {
     }
   };
 
+  const handlePlay = () => {
+    if (videoRef.current) {
+      videoRef.current.play().catch(() => {
+        setStreamError(true);
+      });
+    }
+  };
+
   useEffect(() => {
     const loadCameras = async () => {
       try {
@@ -59,6 +68,26 @@ export default function LiveStream() {
 
     loadCameras();
   }, [id]);
+
+  useRealtime((event) => {
+    if (event.type === 'camera:created') {
+      const camera = event.payload as CameraData;
+      setCameras((prev) => (prev.some((item) => item.id === camera.id) ? prev : [...prev, camera]));
+      if (!selectedCamera) {
+        setSelectedCamera(camera);
+      }
+    }
+    if (event.type === 'camera:updated' || event.type === 'camera:health') {
+      const camera = event.payload as CameraData;
+      setCameras((prev) => prev.map((item) => (item.id === camera.id ? camera : item)));
+      setSelectedCamera((prev) => (prev && prev.id === camera.id ? camera : prev));
+    }
+    if (event.type === 'camera:deleted') {
+      const payload = event.payload as { id: number };
+      setCameras((prev) => prev.filter((item) => item.id !== payload.id));
+      setSelectedCamera((prev) => (prev?.id === payload.id ? null : prev));
+    }
+  });
 
   // Handle video streaming when camera changes
   useEffect(() => {
@@ -117,6 +146,12 @@ export default function LiveStream() {
       }
     };
   }, [selectedCamera]);
+
+  useEffect(() => {
+    if (!selectedCamera && cameras.length > 0) {
+      setSelectedCamera(cameras[0]);
+    }
+  }, [cameras, selectedCamera]);
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] flex flex-col lg:flex-row">
@@ -242,7 +277,7 @@ export default function LiveStream() {
                     </p>
                     {streamError && (
                       <button 
-                        onClick={() => setStreamError(false)}
+                        onClick={reloadStream}
                         className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
                       >
                         Coba Lagi
@@ -264,7 +299,10 @@ export default function LiveStream() {
               </div>
 
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <button className="w-16 h-16 md:w-20 md:h-20 bg-emerald-500 text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform">
+                <button
+                  onClick={handlePlay}
+                  className="w-16 h-16 md:w-20 md:h-20 bg-emerald-500 text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform"
+                >
                   <Play className="w-6 h-6 md:w-8 md:h-8 fill-current" />
                 </button>
               </div>

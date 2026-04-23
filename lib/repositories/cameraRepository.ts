@@ -8,6 +8,7 @@ export interface CameraRecord {
   location: string;
   ip_address: string;
   stream_url: string | null;
+  hls_url: string | null;
   status: CameraStatus;
 }
 
@@ -16,6 +17,7 @@ export interface CameraPayload {
   location: string;
   ip_address: string;
   stream_url: string | null;
+  hls_url: string | null;
   status: CameraStatus;
 }
 
@@ -29,13 +31,14 @@ export class CameraRepository {
     const db = getDatabase();
     const result = db
       .prepare(
-        'INSERT INTO cameras (name, location, ip_address, stream_url, status) VALUES (?, ?, ?, ?, ?)'
+        'INSERT INTO cameras (name, location, ip_address, stream_url, hls_url, status) VALUES (?, ?, ?, ?, ?, ?)'
       )
       .run(
         payload.name,
         payload.location,
         payload.ip_address,
         payload.stream_url,
+        payload.hls_url,
         payload.status
       );
 
@@ -48,13 +51,14 @@ export class CameraRepository {
     const db = getDatabase();
     const result = db
       .prepare(
-        'UPDATE cameras SET name = ?, location = ?, ip_address = ?, stream_url = ?, status = ? WHERE id = ?'
+        'UPDATE cameras SET name = ?, location = ?, ip_address = ?, stream_url = ?, hls_url = ?, status = ? WHERE id = ?'
       )
       .run(
         payload.name,
         payload.location,
         payload.ip_address,
         payload.stream_url,
+        payload.hls_url,
         payload.status,
         id
       );
@@ -70,5 +74,28 @@ export class CameraRepository {
     const db = getDatabase();
     const result = db.prepare('DELETE FROM cameras WHERE id = ?').run(id);
     return result.changes > 0;
+  }
+
+  findById(id: number): CameraRecord | null {
+    const db = getDatabase();
+    return (db.prepare('SELECT * FROM cameras WHERE id = ?').get(id) as CameraRecord) ?? null;
+  }
+
+  updateStatus(id: number, status: CameraStatus): CameraRecord | null {
+    const db = getDatabase();
+    const result = db.prepare('UPDATE cameras SET status = ? WHERE id = ?').run(status, id);
+    if (result.changes === 0) {
+      return null;
+    }
+    return this.findById(id);
+  }
+
+  updateHlsUrl(id: number, hlsUrl: string | null): CameraRecord | null {
+    const db = getDatabase();
+    const result = db.prepare('UPDATE cameras SET hls_url = ? WHERE id = ?').run(hlsUrl, id);
+    if (result.changes === 0) {
+      return null;
+    }
+    return this.findById(id);
   }
 }

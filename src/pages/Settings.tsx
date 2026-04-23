@@ -1,8 +1,22 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Settings as SettingsIcon, Camera, Bell, Shield, Globe, Save, RefreshCw, User, Lock } from 'lucide-react';
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('general');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
+  const [form, setForm] = useState({
+    system_language: 'Bahasa Indonesia',
+    time_zone: '(UTC+07:00) Bangkok, Hanoi, Jakarta',
+    date_format: 'DD/MM/YYYY',
+    default_resolution: '1080p (1920 x 1080)',
+    frame_rate: '30 FPS',
+    night_mode: true,
+    motion_detection: true,
+    static_ip: '192.168.1.100',
+    port: '8080',
+  });
 
   const tabs = [
     { id: 'general', label: 'General Settings', icon: Globe },
@@ -10,6 +24,54 @@ export default function Settings() {
     { id: 'notification', label: 'Notifications', icon: Bell },
     { id: 'security', label: 'User & Access', icon: Shield },
   ];
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch('/api/settings');
+        const data = await res.json();
+        if (res.ok) {
+          setForm({
+            ...data,
+            night_mode: Boolean(data.night_mode),
+            motion_detection: Boolean(data.motion_detection),
+          });
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSettings();
+  }, []);
+
+  const saveSettings = async () => {
+    setSaving(true);
+    setMessage('');
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMessage(data?.error || 'Gagal menyimpan settings');
+        return;
+      }
+      setForm({
+        ...data,
+        night_mode: Boolean(data.night_mode),
+        motion_detection: Boolean(data.motion_detection),
+      });
+      setMessage('Settings berhasil disimpan');
+    } catch {
+      setMessage('Gagal menyimpan settings');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="p-4 md:p-8">
@@ -22,11 +84,16 @@ export default function Settings() {
           <button className="flex-1 md:flex-none px-6 py-2.5 bg-gray-100 text-gray-600 text-sm font-bold rounded-xl hover:bg-gray-200 transition-all">
             Cancel
           </button>
-          <button className="flex-1 md:flex-none px-6 py-2.5 bg-emerald-500 text-white text-sm font-bold rounded-xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2">
+          <button
+            onClick={saveSettings}
+            disabled={saving}
+            className="flex-1 md:flex-none px-6 py-2.5 bg-emerald-500 text-white text-sm font-bold rounded-xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2 disabled:opacity-60"
+          >
             <Save className="w-4 h-4" /> Save
           </button>
         </div>
       </header>
+      {message && <p className="mb-4 text-sm text-gray-600">{message}</p>}
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Tabs Sidebar */}
@@ -58,19 +125,28 @@ export default function Settings() {
             </div>
             
             <div className="p-4 md:p-8 space-y-8">
+              {loading && <p className="text-sm text-gray-500">Loading settings...</p>}
               {activeTab === 'general' && (
                 <div className="grid md:grid-cols-2 gap-8">
                   <div className="space-y-4">
                     <label className="block">
                       <span className="text-sm font-bold text-gray-700 block mb-2">System Language</span>
-                      <select className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+                      <select
+                        value={form.system_language}
+                        onChange={(e) => setForm((prev) => ({ ...prev, system_language: e.target.value }))}
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                      >
                         <option>English (US)</option>
                         <option>Bahasa Indonesia</option>
                       </select>
                     </label>
                     <label className="block">
                       <span className="text-sm font-bold text-gray-700 block mb-2">Time Zone</span>
-                      <select className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+                      <select
+                        value={form.time_zone}
+                        onChange={(e) => setForm((prev) => ({ ...prev, time_zone: e.target.value }))}
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                      >
                         <option>(UTC+07:00) Bangkok, Hanoi, Jakarta</option>
                         <option>(UTC+00:00) UTC</option>
                       </select>
@@ -79,7 +155,11 @@ export default function Settings() {
                   <div className="space-y-4">
                     <label className="block">
                       <span className="text-sm font-bold text-gray-700 block mb-2">Date Format</span>
-                      <select className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+                      <select
+                        value={form.date_format}
+                        onChange={(e) => setForm((prev) => ({ ...prev, date_format: e.target.value }))}
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                      >
                         <option>DD/MM/YYYY</option>
                         <option>YYYY-MM-DD</option>
                       </select>
@@ -102,7 +182,11 @@ export default function Settings() {
                   <div className="grid md:grid-cols-2 gap-8">
                     <label className="block">
                       <span className="text-sm font-bold text-gray-700 block mb-2">Default Resolution</span>
-                      <select className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+                      <select
+                        value={form.default_resolution}
+                        onChange={(e) => setForm((prev) => ({ ...prev, default_resolution: e.target.value }))}
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                      >
                         <option>1080p (1920 x 1080)</option>
                         <option>720p (1280 x 720)</option>
                         <option>4K (3840 x 2160)</option>
@@ -110,7 +194,11 @@ export default function Settings() {
                     </label>
                     <label className="block">
                       <span className="text-sm font-bold text-gray-700 block mb-2">Frame Rate (FPS)</span>
-                      <select className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+                      <select
+                        value={form.frame_rate}
+                        onChange={(e) => setForm((prev) => ({ ...prev, frame_rate: e.target.value }))}
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                      >
                         <option>30 FPS</option>
                         <option>60 FPS</option>
                         <option>15 FPS</option>
@@ -119,11 +207,21 @@ export default function Settings() {
                   </div>
                   <div className="flex items-center gap-8 p-4 bg-gray-50 rounded-2xl">
                     <label className="flex items-center gap-3 cursor-pointer">
-                      <input type="checkbox" defaultChecked className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" />
+                      <input
+                        type="checkbox"
+                        checked={form.night_mode}
+                        onChange={(e) => setForm((prev) => ({ ...prev, night_mode: e.target.checked }))}
+                        className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                      />
                       <span className="text-sm font-medium text-gray-700">Night Mode</span>
                     </label>
                     <label className="flex items-center gap-3 cursor-pointer">
-                      <input type="checkbox" defaultChecked className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" />
+                      <input
+                        type="checkbox"
+                        checked={form.motion_detection}
+                        onChange={(e) => setForm((prev) => ({ ...prev, motion_detection: e.target.checked }))}
+                        className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                      />
                       <span className="text-sm font-medium text-gray-700">Motion Detection</span>
                     </label>
                   </div>
@@ -154,11 +252,21 @@ export default function Settings() {
                     <div className="grid md:grid-cols-2 gap-4">
                       <label className="block">
                         <span className="text-xs font-bold text-gray-500 uppercase block mb-1.5">Static IP Address</span>
-                        <input type="text" defaultValue="192.168.1.100" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500" />
+                        <input
+                          type="text"
+                          value={form.static_ip}
+                          onChange={(e) => setForm((prev) => ({ ...prev, static_ip: e.target.value }))}
+                          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
                       </label>
                       <label className="block">
                         <span className="text-xs font-bold text-gray-500 uppercase block mb-1.5">Port</span>
-                        <input type="text" defaultValue="8080" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500" />
+                        <input
+                          type="text"
+                          value={form.port}
+                          onChange={(e) => setForm((prev) => ({ ...prev, port: e.target.value }))}
+                          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
                       </label>
                     </div>
                   </div>

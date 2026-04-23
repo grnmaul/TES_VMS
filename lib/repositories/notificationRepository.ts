@@ -29,4 +29,16 @@ export class NotificationRepository {
       .prepare('SELECT * FROM notifications WHERE id = ?')
       .get(result.lastInsertRowid) as NotificationRecord;
   }
+
+  markAllAsRead(): number {
+    const db = getDatabase();
+    const result = db.prepare('UPDATE notifications SET is_read = 1 WHERE is_read = 0').run();
+    return result.changes;
+  }
+
+  clearAll(): number {
+    const db = getDatabase();
+    const result = db.prepare('DELETE FROM notifications').run();
+    return result.changes;
+  }
 }

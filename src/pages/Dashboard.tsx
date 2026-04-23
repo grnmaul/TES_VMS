@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Camera, Activity, AlertTriangle, CheckCircle2, MoreVertical, Search, Filter, Settings } from 'lucide-react';
 import { motion } from 'motion/react';
-import { io, Socket } from 'socket.io-client';
+import { useRouter } from 'next/navigation';
+import { useRealtime } from '@/src/lib/useRealtime';
 
 interface CameraData {
   id: number;
@@ -14,35 +15,34 @@ interface CameraData {
 }
 
 export default function Dashboard() {
+  const router = useRouter();
   const [cameras, setCameras] = useState<CameraData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/cameras')
-      .then(res => res.json())
-      .then(data => {
-        setCameras(data);
-        setLoading(false);
-      });
-
-    const socket: Socket = io();
-
-    socket.on('camera:created', (newCamera: CameraData) => {
-      setCameras(prev => [...prev, newCamera]);
-    });
-
-    socket.on('camera:updated', (updatedCamera: CameraData) => {
-      setCameras(prev => prev.map(c => c.id === updatedCamera.id ? updatedCamera : c));
-    });
-
-    socket.on('camera:deleted', ({ id }: { id: number }) => {
-      setCameras(prev => prev.filter(c => c.id !== id));
-    });
-
-    return () => {
-      socket.disconnect();
+    const loadCameras = async () => {
+      const res = await fetch('/api/cameras', { cache: 'no-store' });
+      const data = await res.json();
+      setCameras(data);
+      setLoading(false);
     };
+    loadCameras();
   }, []);
+
+  useRealtime((event) => {
+    if (event.type === 'camera:created') {
+      const camera = event.payload as CameraData;
+      setCameras((prev) => (prev.some((item) => item.id === camera.id) ? prev : [...prev, camera]));
+    }
+    if (event.type === 'camera:updated' || event.type === 'camera:health') {
+      const camera = event.payload as CameraData;
+      setCameras((prev) => prev.map((item) => (item.id === camera.id ? camera : item)));
+    }
+    if (event.type === 'camera:deleted') {
+      const payload = event.payload as { id: number };
+      setCameras((prev) => prev.filter((item) => item.id !== payload.id));
+    }
+  });
 
   const stats = [
     { label: 'Total Cameras', value: cameras.length, icon: Camera, color: 'text-blue-600', bg: 'bg-blue-50' },
@@ -102,7 +102,7 @@ export default function Dashboard() {
               <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
               Live Monitoring Feed
             </h2>
-            <button className="text-sm text-emerald-600 font-bold hover:underline">View All</button>
+            <button onClick={() => router.push('/stream')} className="text-sm text-emerald-600 font-bold hover:underline">View All</button>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -187,7 +187,7 @@ export default function Dashboard() {
       <div className="mt-8 bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-gray-50 flex justify-between items-center">
           <h2 className="text-lg font-bold text-gray-900">Manage Camera Inventory</h2>
-          <button className="px-4 py-2 bg-emerald-500 text-white text-sm font-bold rounded-xl hover:bg-emerald-600 transition-colors">
+          <button onClick={() => router.push('/cameras')} className="px-4 py-2 bg-emerald-500 text-white text-sm font-bold rounded-xl hover:bg-emerald-600 transition-colors">
             + Add New Camera
           </button>
         </div>

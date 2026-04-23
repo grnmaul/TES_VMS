@@ -5,6 +5,8 @@ import {
   CameraRepository,
   CameraStatus,
 } from '@/lib/repositories/cameraRepository';
+import { wsHub } from '@/lib/realtime/wsHub';
+import { rtspToHlsService } from '@/lib/stream/rtspToHlsService';
 
 function isCameraStatus(value: unknown): value is CameraStatus {
   return value === 'online' || value === 'offline';
@@ -28,8 +30,12 @@ function parseId(id: unknown): number {
 export class CameraService {
   constructor(private readonly cameraRepository: CameraRepository) {}
 
-  listCameras(): CameraRecord[] {
-    return this.cameraRepository.listAll();
+  listCameras(): Array<CameraRecord & { stream_url: string | null; rtsp_url: string | null }> {
+    return this.cameraRepository.listAll().map((camera) => ({
+      ...camera,
+      rtsp_url: camera.stream_url,
+      stream_url: camera.hls_url || camera.stream_url,
+    }));
   }
 
   createCamera(input: {
@@ -40,7 +46,10 @@ export class CameraService {
     status: unknown;
   }): CameraRecord {
     const payload = this.buildPayload(input);
-    return this.cameraRepository.create(payload);
+    const created = this.cameraRepository.create(payload);
+    rtspToHlsService.sync(created);
+    wsHub.broadcast({ type: 'camera:created', payload: created });
+    return created;
   }
 
   updateCamera(
@@ -61,15 +70,19 @@ export class CameraService {
       throw new AppError('Camera not found', 404);
     }
 
+    rtspToHlsService.sync(updated);
+    wsHub.broadcast({ type: 'camera:updated', payload: updated });
     return updated;
   }
 
   deleteCamera(id: unknown): { success: true } {
     const cameraId = parseId(id);
+    rtspToHlsService.stop(cameraId);
     const deleted = this.cameraRepository.delete(cameraId);
     if (!deleted) {
       throw new AppError('Camera not found', 404);
     }
+    wsHub.broadcast({ type: 'camera:deleted', payload: { id: cameraId } });
     return { success: true };
   }
 
@@ -98,6 +111,7 @@ export class CameraService {
       location,
       ip_address: ipAddress,
       stream_url: streamUrl,
+      hls_url: null,
       status: input.status,
     };
   }

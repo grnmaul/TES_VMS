@@ -33,6 +33,14 @@ export class NotificationService {
 
     return this.notificationRepository.create(title.trim(), message.trim(), type);
   }
+
+  markAllAsRead(): { updated: number } {
+    return { updated: this.notificationRepository.markAllAsRead() };
+  }
+
+  clearAll(): { deleted: number } {
+    return { deleted: this.notificationRepository.clearAll() };
+  }
 }
 
 export const notificationService = new NotificationService(

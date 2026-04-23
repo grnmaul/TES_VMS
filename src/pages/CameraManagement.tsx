@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Search, Plus, Filter, MoreVertical, Edit2, Trash2, ExternalLink, Camera as CameraIcon, Globe, X } from 'lucide-react';
-import { io, Socket } from 'socket.io-client';
+import { useRouter } from 'next/navigation';
+import { useRealtime } from '@/src/lib/useRealtime';
 
 interface CameraData {
   id: number;
@@ -14,8 +15,11 @@ interface CameraData {
 }
 
 export default function CameraManagement() {
+  const router = useRouter();
   const [cameras, setCameras] = useState<CameraData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusMessage, setStatusMessage] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCamera, setEditingCamera] = useState<CameraData | null>(null);
   const [formData, setFormData] = useState({
@@ -27,34 +31,30 @@ export default function CameraManagement() {
   });
 
   useEffect(() => {
-    fetch('/api/cameras')
-      .then(res => res.json())
-      .then(data => {
-        setCameras(data);
-        setLoading(false);
-      });
-
-    const socket: Socket = io();
-
-    socket.on('camera:created', (newCamera: CameraData) => {
-      setCameras(prev => {
-        if (prev.find(c => c.id === newCamera.id)) return prev;
-        return [...prev, newCamera];
-      });
-    });
-
-    socket.on('camera:updated', (updatedCamera: CameraData) => {
-      setCameras(prev => prev.map(c => c.id === updatedCamera.id ? updatedCamera : c));
-    });
-
-    socket.on('camera:deleted', ({ id }: { id: number }) => {
-      setCameras(prev => prev.filter(c => c.id !== id));
-    });
-
-    return () => {
-      socket.disconnect();
+    const loadCameras = async () => {
+      const res = await fetch('/api/cameras', { cache: 'no-store' });
+      const data = await res.json();
+      setCameras(data);
+      setLoading(false);
     };
+
+    loadCameras();
   }, []);
+
+  useRealtime((event) => {
+    if (event.type === 'camera:created') {
+      const camera = event.payload as CameraData;
+      setCameras((prev) => (prev.some((item) => item.id === camera.id) ? prev : [...prev, camera]));
+    }
+    if (event.type === 'camera:updated' || event.type === 'camera:health') {
+      const camera = event.payload as CameraData;
+      setCameras((prev) => prev.map((item) => (item.id === camera.id ? camera : item)));
+    }
+    if (event.type === 'camera:deleted') {
+      const payload = event.payload as { id: number };
+      setCameras((prev) => prev.filter((item) => item.id !== payload.id));
+    }
+  });
 
   const handleOpenModal = (camera?: CameraData) => {
     if (camera) {
@@ -92,15 +92,35 @@ export default function CameraManagement() {
     });
 
     if (res.ok) {
+      const fresh = await fetch('/api/cameras', { cache: 'no-store' });
+      setCameras(await fresh.json());
+      setStatusMessage(editingCamera ? 'Kamera berhasil diperbarui.' : 'Kamera berhasil ditambahkan.');
       setIsModalOpen(false);
+    } else {
+      const data = await res.json();
+      setStatusMessage(data?.error || 'Gagal menyimpan data kamera.');
     }
   };
 
   const handleDelete = async (id: number) => {
     if (confirm('Are you sure you want to delete this camera?')) {
-      await fetch(`/api/cameras/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/cameras/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setCameras((prev) => prev.filter((camera) => camera.id !== id));
+        setStatusMessage('Kamera berhasil dihapus.');
+      }
     }
   };
+
+  const filteredCameras = cameras.filter((camera) => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return true;
+    return (
+      camera.name.toLowerCase().includes(query) ||
+      camera.ip_address.toLowerCase().includes(query) ||
+      camera.location.toLowerCase().includes(query)
+    );
+  });
 
   return (
     <div className="p-4 md:p-8">
@@ -118,12 +138,17 @@ export default function CameraManagement() {
       </header>
 
       <div className="bg-white rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+        {statusMessage && (
+          <p className="px-4 md:px-6 pt-4 text-sm text-emerald-700">{statusMessage}</p>
+        )}
         <div className="p-4 md:p-6 border-b border-gray-50 flex flex-col md:flex-row gap-4 justify-between items-center">
           <div className="relative w-full md:w-96">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input 
               type="text" 
               placeholder="Search by name, IP, or location..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-12 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
             />
           </div>
@@ -133,8 +158,8 @@ export default function CameraManagement() {
             </button>
             <div className="flex-1 md:flex-none px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 flex items-center justify-center gap-2">
               <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
-              <span className="hidden sm:inline">{cameras.filter(c => c.status === 'online').length} Devices Active</span>
-              <span className="sm:hidden">{cameras.filter(c => c.status === 'online').length} Active</span>
+              <span className="hidden sm:inline">{filteredCameras.filter(c => c.status === 'online').length} Devices Active</span>
+              <span className="sm:hidden">{filteredCameras.filter(c => c.status === 'online').length} Active</span>
             </div>
           </div>
         </div>
@@ -151,7 +176,7 @@ export default function CameraManagement() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {cameras.map((camera) => (
+              {filteredCameras.map((camera) => (
                 <tr key={camera.id} className="hover:bg-gray-50 transition-colors group">
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-3">
@@ -185,7 +210,11 @@ export default function CameraManagement() {
                   </td>
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                      <button className="p-2 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg text-gray-400 transition-all" title="View Stream">
+                      <button
+                        onClick={() => router.push(`/stream/${camera.id}`)}
+                        className="p-2 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg text-gray-400 transition-all"
+                        title="View Stream"
+                      >
                         <ExternalLink className="w-4 h-4" />
                       </button>
                       <button 
@@ -211,7 +240,7 @@ export default function CameraManagement() {
         </div>
 
         <div className="p-4 md:p-6 border-t border-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-500">
-          <p>Showing 1 to {cameras.length} of {cameras.length} cameras</p>
+          <p>Showing 1 to {filteredCameras.length} of {cameras.length} cameras</p>
           <div className="flex gap-2">
             <button className="px-3 py-1 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50" disabled>Previous</button>
             <button className="px-3 py-1 bg-emerald-500 text-white rounded-lg">1</button>
