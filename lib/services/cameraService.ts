@@ -101,10 +101,14 @@ export class CameraService {
       throw new AppError('Status must be online or offline', 400);
     }
 
-    const streamUrl =
-      typeof input.stream_url === 'string' && input.stream_url.trim().length > 0
-        ? input.stream_url.trim()
-        : null;
+    let streamUrl: string | null = null;
+    if (typeof input.stream_url === 'string' && input.stream_url.trim().length > 0) {
+      streamUrl = input.stream_url.trim();
+      // Validate RTSP URL format
+      if (!streamUrl.toLowerCase().startsWith('rtsp://') && !streamUrl.toLowerCase().startsWith('rtsps://')) {
+        throw new AppError('Stream URL must be a valid RTSP URL (rtsp:// or rtsps://)', 400);
+      }
+    }
 
     return {
       name,

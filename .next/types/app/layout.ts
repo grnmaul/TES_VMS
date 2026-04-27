@@ -1,4 +1,4 @@
-// File: D:\Project Magang CCTV 2.0\Beta-2.0\app\layout.tsx
+// File: /vercel/share/v0-project/app/layout.tsx
 import * as entry from '../../../app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
