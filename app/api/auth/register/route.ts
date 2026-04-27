@@ -9,6 +9,6 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     password: unknown;
     full_name: unknown;
   }>(req);
-  const response = authService.register(username, password, full_name);
+  const response = await Promise.resolve(authService.register(username, password, full_name));
   return ok(response);
 });

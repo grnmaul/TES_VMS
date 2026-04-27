@@ -21,14 +21,21 @@ async function probeCamera(ipAddress: string): Promise<CameraStatus> {
     const finish = (status: CameraStatus) => {
       if (completed) return;
       completed = true;
-      socket.destroy();
+      try {
+        socket.destroy();
+      } catch (error) {
+        console.error(`[v0] Error destroying socket for ${host}:${port}:`, error instanceof Error ? error.message : error);
+      }
       resolve(status);
     };
 
     socket.setTimeout(HEALTH_TIMEOUT_MS);
     socket.on('connect', () => finish('online'));
     socket.on('timeout', () => finish('offline'));
-    socket.on('error', () => finish('offline'));
+    socket.on('error', (error) => {
+      console.debug(`[v0] Camera probe error for ${host}:${port}:`, error.message);
+      finish('offline');
+    });
   });
 }
 
@@ -44,21 +51,29 @@ class CameraHealthService {
   }
 
   private async runCycle() {
-    const cameras = this.cameraRepository.listAll();
-    await Promise.all(
-      cameras.map(async (camera) => {
-        const realStatus = await probeCamera(camera.ip_address);
-        if (realStatus !== camera.status) {
-          const updated = this.cameraRepository.updateStatus(camera.id, realStatus);
-          if (updated) {
-            rtspToHlsService.sync(updated);
-            wsHub.broadcast({ type: 'camera:health', payload: updated });
+    try {
+      const cameras = this.cameraRepository.listAll();
+      await Promise.all(
+        cameras.map(async (camera) => {
+          try {
+            const realStatus = await probeCamera(camera.ip_address);
+            if (realStatus !== camera.status) {
+              const updated = this.cameraRepository.updateStatus(camera.id, realStatus);
+              if (updated) {
+                rtspToHlsService.sync(updated);
+                wsHub.broadcast({ type: 'camera:health', payload: updated });
+              }
+              return;
+            }
+            rtspToHlsService.sync(camera);
+          } catch (error) {
+            console.error(`[v0] Error probing camera ${camera.id}:`, error instanceof Error ? error.message : error);
           }
-          return;
-        }
-        rtspToHlsService.sync(camera);
-      })
-    );
+        })
+      );
+    } catch (error) {
+      console.error('[v0] Error in camera health check cycle:', error instanceof Error ? error.message : error);
+    }
   }
 }
 

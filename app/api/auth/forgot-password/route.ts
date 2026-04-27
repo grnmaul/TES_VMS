@@ -5,6 +5,6 @@ import { authService } from '@/lib/services/authService';
 
 export const POST = withErrorHandler(async (req: NextRequest) => {
   const { username } = await parseJson<{ username: unknown }>(req);
-  const response = authService.forgotPassword(username);
+  const response = await Promise.resolve(authService.forgotPassword(username));
   return ok(response);
 });

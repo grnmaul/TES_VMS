@@ -15,25 +15,40 @@ class WsHub {
       return;
     }
 
-    this.server = new WebSocketServer({ port: WS_PORT });
-    this.server.on('connection', (socket) => {
-      socket.send(
-        JSON.stringify({
-          type: 'system:connected',
-          payload: { connectedAt: new Date().toISOString() },
-        } satisfies RealtimeEvent)
-      );
-    });
+    try {
+      this.server = new WebSocketServer({ port: WS_PORT });
+      this.server.on('connection', (socket) => {
+        socket.send(
+          JSON.stringify({
+            type: 'system:connected',
+            payload: { connectedAt: new Date().toISOString() },
+          } satisfies RealtimeEvent)
+        );
+      });
+
+      this.server.on('error', (error) => {
+        console.error(`[v0] WebSocket server error on port ${WS_PORT}:`, error.message);
+      });
+
+      console.log(`[v0] WebSocket server started on port ${WS_PORT}`);
+    } catch (error) {
+      console.error(`[v0] Failed to start WebSocket server:`, error instanceof Error ? error.message : error);
+    }
   }
 
   broadcast(event: RealtimeEvent) {
     if (!this.server) {
+      console.warn('[v0] WebSocket server not initialized, skipping broadcast');
       return;
     }
     const body = JSON.stringify(event);
     this.server.clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
-        client.send(body);
+        try {
+          client.send(body);
+        } catch (error) {
+          console.error('[v0] Error sending WebSocket message:', error instanceof Error ? error.message : error);
+        }
       }
     });
   }
