@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Camera, Activity, AlertTriangle, CheckCircle2, MoreVertical, Search, Filter, Settings } from 'lucide-react';
+import { Camera, Activity, AlertTriangle, CheckCircle2, MoreVertical, Search, Filter, Settings, Play } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
 import { useRealtime } from '@/src/lib/useRealtime';
@@ -111,12 +111,7 @@ export default function Dashboard() {
                 <div className="aspect-video bg-gray-900 relative">
                   {/* Placeholder for camera feed */}
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <img 
-                      src={`https://picsum.photos/seed/cam-${camera.id}/800/450`} 
-                      className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-                      alt={camera.name}
-                      referrerPolicy="no-referrer"
-                    />
+                    <Camera className="w-12 h-12 text-gray-700" />
                   </div>
                   <div className="absolute top-3 left-3 flex gap-2">
                     <span className="px-2 py-1 bg-black/50 backdrop-blur-md text-white text-[10px] font-bold rounded-md flex items-center gap-1">
@@ -127,6 +122,15 @@ export default function Dashboard() {
                       CAM-0{camera.id}
                     </span>
                   </div>
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
+                  <a 
+                    href={`/live-stream/${camera.id}`}
+                    className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <div className="w-12 h-12 bg-emerald-500 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
+                      <Play className="w-5 h-5 fill-current" />
+                    </div>
+                  </a>
                 </div>
                 <div className="p-4 flex justify-between items-center">
                   <div>

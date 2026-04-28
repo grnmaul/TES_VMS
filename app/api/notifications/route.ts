@@ -5,6 +5,8 @@ import { notificationService } from '@/lib/services/notificationService';
 import { ensureRuntimeBootstrapped } from '@/lib/runtime/bootstrap';
 import { wsHub } from '@/lib/realtime/wsHub';
 
+export const dynamic = 'force-dynamic';
+
 export const GET = withErrorHandler(async (req: NextRequest) => {
   ensureRuntimeBootstrapped();
   const notifications = notificationService.listNotifications();

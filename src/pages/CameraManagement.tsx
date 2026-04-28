@@ -298,7 +298,15 @@ export default function CameraManagement() {
                 <input 
                   type="text" 
                   value={formData.stream_url}
-                  onChange={e => setFormData({...formData, stream_url: e.target.value})}
+                  onChange={e => {
+                    const newUrl = e.target.value;
+                    let newIp = formData.ip_address;
+                    if (!newIp) {
+                       const match = newUrl.match(/rtsp:\/\/(?:[^:@]+:[^:@]+@)?([a-zA-Z0-9.-]+)/);
+                       if (match && match[1]) newIp = match[1];
+                    }
+                    setFormData({...formData, stream_url: newUrl, ip_address: newIp});
+                  }}
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
                   placeholder="e.g. rtsp://192.168.1.101:554/live"
                 />

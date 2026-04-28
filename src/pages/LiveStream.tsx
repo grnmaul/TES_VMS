@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, createElement } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Play, Maximize2, Share2, RefreshCw, Camera as CameraIcon, MapPin, Info, Menu, X } from 'lucide-react';
-import Hls from 'hls.js';
 import { useRealtime } from '@/src/lib/useRealtime';
 
 interface CameraData {
@@ -23,8 +22,14 @@ export default function LiveStream() {
   const [isListOpen, setIsListOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [streamError, setStreamError] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const hlsRef = useRef<Hls | null>(null);
+  const videoRef = useRef<HTMLDivElement>(null);
+  const [hostname, setHostname] = useState('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setHostname(window.location.hostname);
+    }
+  }, []);
 
   const reloadStream = () => {
     if (selectedCamera?.stream_url) {
@@ -33,14 +38,6 @@ export default function LiveStream() {
       const currentCamera = selectedCamera;
       setSelectedCamera(null);
       setTimeout(() => setSelectedCamera(currentCamera), 100);
-    }
-  };
-
-  const handlePlay = () => {
-    if (videoRef.current) {
-      videoRef.current.play().catch(() => {
-        setStreamError(true);
-      });
     }
   };
 
@@ -88,64 +85,6 @@ export default function LiveStream() {
       setSelectedCamera((prev) => (prev?.id === payload.id ? null : prev));
     }
   });
-
-  // Handle video streaming when camera changes
-  useEffect(() => {
-    if (!selectedCamera?.stream_url || !videoRef.current) return;
-
-    const video = videoRef.current;
-    setStreamError(false);
-
-    // Clean up previous HLS instance
-    if (hlsRef.current) {
-      hlsRef.current.destroy();
-      hlsRef.current = null;
-    }
-
-    // Check if stream URL is HLS (.m3u8)
-    if (selectedCamera.stream_url.includes('.m3u8') || selectedCamera.stream_url.includes('m3u8')) {
-      if (Hls.isSupported()) {
-        const hls = new Hls({
-          enableWorker: true,
-          lowLatencyMode: true,
-          backBufferLength: 90
-        });
-        
-        hls.loadSource(selectedCamera.stream_url);
-        hls.attachMedia(video);
-        
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          video.play().catch(() => {
-            // Autoplay failed, user interaction required
-          });
-        });
-        
-        hls.on(Hls.Events.ERROR, (event, data) => {
-          console.error('HLS Error:', data);
-          if (data.fatal) {
-            setStreamError(true);
-          }
-        });
-        
-        hlsRef.current = hls;
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        // Native HLS support (Safari)
-        video.src = selectedCamera.stream_url;
-      } else {
-        setStreamError(true);
-      }
-    } else {
-      // Assume it's a direct video URL or RTSP (fallback to placeholder)
-      setStreamError(true);
-    }
-
-    return () => {
-      if (hlsRef.current) {
-        hlsRef.current.destroy();
-        hlsRef.current = null;
-      }
-    };
-  }, [selectedCamera]);
 
   useEffect(() => {
     if (!selectedCamera && cameras.length > 0) {
@@ -252,16 +191,16 @@ export default function LiveStream() {
           <div className="bg-white rounded-2xl md:rounded-[32px] overflow-hidden shadow-xl border border-gray-100">
             <div className="aspect-video bg-gray-900 relative group">
               {selectedCamera?.stream_url && !streamError ? (
-                <video 
-                  ref={videoRef}
-                  className="w-full h-full object-contain"
-                  controls
-                  autoPlay
-                  muted
-                  poster={`https://picsum.photos/seed/camera-${selectedCamera.id}/1280/720`}
-                >
-                  Browser Anda tidak mendukung pemutaran video streaming.
-                </video>
+                <div className="w-full h-full relative" ref={videoRef}>
+                  {hostname && (
+                    <iframe
+                      src={`http://${hostname}:1984/stream.html?src=camera-${selectedCamera.id}&mode=webrtc`}
+                      className="w-full h-full border-0 absolute inset-0"
+                      allow="autoplay; fullscreen; picture-in-picture; web-share"
+                      allowFullScreen
+                    />
+                  )}
+                </div>
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gray-800">
                   <div className="text-center text-white">
@@ -288,29 +227,17 @@ export default function LiveStream() {
               )}
               
               {/* Overlay Controls */}
-              <div className="absolute top-4 left-4 md:top-6 md:left-6 flex flex-wrap gap-2 md:gap-3">
+              <div className="absolute top-4 left-4 md:top-6 md:left-6 flex flex-wrap gap-2 md:gap-3 pointer-events-none">
                 <span className="px-2 md:px-3 py-1 md:py-1.5 bg-red-500 text-white text-[10px] md:text-xs font-bold rounded-full flex items-center gap-1 md:gap-2 shadow-lg">
                   <span className="w-1.5 md:w-2 h-1.5 md:h-2 bg-white rounded-full animate-pulse"></span>
                   LIVE
                 </span>
-                <span className="px-2 md:px-3 py-1 md:py-1.5 bg-black/40 backdrop-blur-md text-white text-[10px] md:text-xs font-bold rounded-full">
-                  08:50:33
-                </span>
               </div>
 
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  onClick={handlePlay}
-                  className="w-16 h-16 md:w-20 md:h-20 bg-emerald-500 text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform"
-                >
-                  <Play className="w-6 h-6 md:w-8 md:h-8 fill-current" />
-                </button>
-              </div>
-
-              <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6">
+              <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6 pointer-events-none">
                 <button 
                   onClick={reloadStream}
-                  className="px-3 md:px-4 py-1.5 md:py-2 bg-emerald-500 text-white text-[10px] md:text-xs font-bold rounded-xl flex items-center gap-2 shadow-lg hover:bg-emerald-600 transition-colors"
+                  className="pointer-events-auto px-3 md:px-4 py-1.5 md:py-2 bg-emerald-500 text-white text-[10px] md:text-xs font-bold rounded-xl flex items-center gap-2 shadow-lg hover:bg-emerald-600 transition-colors"
                 >
                   <RefreshCw className="w-3 md:w-4 h-3 md:h-4" /> <span className="hidden sm:inline">Reload Stream</span><span className="sm:hidden">Reload</span>
                 </button>
@@ -328,41 +255,11 @@ export default function LiveStream() {
                 </div>
               </div>
               <div className="flex gap-4 w-full md:w-auto justify-between md:justify-end">
-                <div className="text-center px-4 md:px-6 border-r border-gray-100">
+                <div className="text-center px-4 md:px-6">
                   <p className="text-[8px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Status</p>
                   <p className="text-xs md:text-sm font-bold text-emerald-600">Terhubung</p>
                 </div>
-                <div className="text-center px-4 md:px-6">
-                  <p className="text-[8px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Kualitas</p>
-                  <p className="text-xs md:text-sm font-bold text-gray-900">1080p HD</p>
-                </div>
               </div>
-            </div>
-          </div>
-
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-              <h4 className="text-sm font-bold text-gray-900 mb-4">Informasi Teknis</h4>
-              <div className="space-y-3">
-                <div className="flex justify-between text-xs">
-                  <span className="text-gray-500">Bitrate</span>
-                  <span className="font-bold">4.2 Mbps</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-gray-500">Codec</span>
-                  <span className="font-bold">H.264</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-gray-500">Latency</span>
-                  <span className="font-bold">240ms</span>
-                </div>
-              </div>
-            </div>
-            <div className="md:col-span-2 bg-emerald-50 p-6 rounded-3xl border border-emerald-100">
-              <h4 className="text-sm font-bold text-emerald-800 mb-2">Catatan Pengawasan</h4>
-              <p className="text-xs text-emerald-700 leading-relaxed">
-                Area ini merupakan titik rawan kemacetan pada jam sibuk (07:00 - 09:00). Pastikan koordinasi dengan petugas lapangan jika terjadi penumpukan kendaraan yang signifikan.
-              </p>
             </div>
           </div>
         </div>

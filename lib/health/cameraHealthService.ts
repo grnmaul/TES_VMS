@@ -1,7 +1,7 @@
 import net from 'net';
 import { CameraRepository, CameraStatus } from '@/lib/repositories/cameraRepository';
 import { wsHub } from '@/lib/realtime/wsHub';
-import { rtspToHlsService } from '@/lib/stream/rtspToHlsService';
+import { go2rtcService } from '@/lib/stream/go2rtcService';
 
 const HEALTH_INTERVAL_MS = 15000;
 const HEALTH_TIMEOUT_MS = 2500;
@@ -51,12 +51,12 @@ class CameraHealthService {
         if (realStatus !== camera.status) {
           const updated = this.cameraRepository.updateStatus(camera.id, realStatus);
           if (updated) {
-            rtspToHlsService.sync(updated);
+            go2rtcService.sync(updated);
             wsHub.broadcast({ type: 'camera:health', payload: updated });
           }
           return;
         }
-        rtspToHlsService.sync(camera);
+        go2rtcService.sync(camera);
       })
     );
   }

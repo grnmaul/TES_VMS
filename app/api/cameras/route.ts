@@ -4,6 +4,8 @@ import { ok, withErrorHandler } from '@/lib/http/response';
 import { parseJson } from '@/lib/http/request';
 import { ensureRuntimeBootstrapped } from '@/lib/runtime/bootstrap';
 
+export const dynamic = 'force-dynamic';
+
 export const GET = withErrorHandler(async (req: NextRequest) => {
   ensureRuntimeBootstrapped();
   const cameras = cameraService.listCameras();

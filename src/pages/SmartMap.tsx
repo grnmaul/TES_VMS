@@ -194,7 +194,6 @@ export default function SmartMap() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          query: query,
           conversationHistory: updatedMessages.map(m => ({
             role: m.role,
             content: m.content
@@ -211,17 +210,20 @@ export default function SmartMap() {
           timestamp: Date.now()
         };
         setMessages(prev => [...prev, assistantMessage]);
-        setPlaces(data.places || []);
+        setPlaces(Array.isArray(data.places) ? data.places : []);
       } else if (data.error) {
         throw new Error(data.error);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.warn('AI API failed, falling back to mock', error);
       const { mockResponse, mockPlaces } = generateMock(query);
+      
+      const errorMessage = error.message ? `*(Sistem: ${error.message}. Beralih ke Offline Mode)*\n\n` : `*(Sistem: Beralih ke Offline Mode)*\n\n`;
+      
       const assistantMessage: Message = {
         id: `assistant-${Date.now()}`,
         role: 'assistant',
-        content: mockResponse,
+        content: errorMessage + mockResponse,
         timestamp: Date.now()
       };
       setMessages(prev => [...prev, assistantMessage]);

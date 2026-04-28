@@ -6,7 +6,7 @@ import {
   CameraStatus,
 } from '@/lib/repositories/cameraRepository';
 import { wsHub } from '@/lib/realtime/wsHub';
-import { rtspToHlsService } from '@/lib/stream/rtspToHlsService';
+import { go2rtcService } from '@/lib/stream/go2rtcService';
 
 function isCameraStatus(value: unknown): value is CameraStatus {
   return value === 'online' || value === 'offline';
@@ -34,7 +34,7 @@ export class CameraService {
     return this.cameraRepository.listAll().map((camera) => ({
       ...camera,
       rtsp_url: camera.stream_url,
-      stream_url: camera.hls_url || camera.stream_url,
+      stream_url: camera.stream_url, // We will use go2rtc API directly on the frontend using the camera id
     }));
   }
 
@@ -47,7 +47,7 @@ export class CameraService {
   }): CameraRecord {
     const payload = this.buildPayload(input);
     const created = this.cameraRepository.create(payload);
-    rtspToHlsService.sync(created);
+    go2rtcService.sync(created);
     wsHub.broadcast({ type: 'camera:created', payload: created });
     return created;
   }
@@ -70,14 +70,14 @@ export class CameraService {
       throw new AppError('Camera not found', 404);
     }
 
-    rtspToHlsService.sync(updated);
+    go2rtcService.sync(updated);
     wsHub.broadcast({ type: 'camera:updated', payload: updated });
     return updated;
   }
 
   deleteCamera(id: unknown): { success: true } {
     const cameraId = parseId(id);
-    rtspToHlsService.stop(cameraId);
+    go2rtcService.removeStream(cameraId);
     const deleted = this.cameraRepository.delete(cameraId);
     if (!deleted) {
       throw new AppError('Camera not found', 404);

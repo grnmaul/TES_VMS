@@ -3,6 +3,8 @@ import { ok, withErrorHandler } from '@/lib/http/response';
 import { parseJson } from '@/lib/http/request';
 import { settingsService } from '@/lib/services/settingsService';
 
+export const dynamic = 'force-dynamic';
+
 export const GET = withErrorHandler(async () => {
   return ok(settingsService.getSettings());
 });

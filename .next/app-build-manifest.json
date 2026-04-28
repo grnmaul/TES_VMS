@@ -1,20 +1,25 @@
 {
   "pages": {
+    "/api/realtime/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/realtime/route.js"
+    ],
     "/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
-    "/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
-    ],
     "/login/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/login/page.js"
+    ],
+    "/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/page.js"
     ],
     "/api/auth/login/route": [
       "static/chunks/webpack.js",
@@ -31,6 +36,16 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/cameras/route.js"
     ],
+    "/smart-map/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/smart-map/page.js"
+    ],
+    "/api/ai/query/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/ai/query/route.js"
+    ],
     "/stream/[id]/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -41,15 +56,10 @@
       "static/chunks/main-app.js",
       "static/chunks/app/live-stream/[id]/page.js"
     ],
-    "/api/realtime/route": [
+    "/cameras/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/realtime/route.js"
-    ],
-    "/_not-found/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/_not-found/page.js"
+      "static/chunks/app/cameras/page.js"
     ]
   }
 }

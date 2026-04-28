@@ -88,38 +88,7 @@ export function getDatabase() {
       count: number;
     };
     if (cameraCount.count === 0) {
-      const cameras = [
-        {
-          name: 'Jembatan Lawu',
-          location: 'Jl. Lawu',
-          ip_address: '192.168.1.101',
-          status: 'online',
-        },
-        {
-          name: 'Sleko Arah Tugu',
-          location: 'Jl. Sleko',
-          ip_address: '192.168.1.102',
-          status: 'online',
-        },
-        {
-          name: 'MT Haryono Sumber Karya',
-          location: 'Jl. MT Haryono',
-          ip_address: '192.168.1.103',
-          status: 'offline',
-        },
-        {
-          name: 'Penyebrangan Kasih Sayang PSC',
-          location: 'Pahlawan Street Center',
-          ip_address: '192.168.1.104',
-          status: 'online',
-        },
-      ];
-      const insert = db.prepare(
-        'INSERT INTO cameras (name, location, ip_address, status) VALUES (?, ?, ?, ?)'
-      );
-      cameras.forEach((c) =>
-        insert.run(c.name, c.location, c.ip_address, c.status)
-      );
+      // Empty logic: cameras should only be added manually via admin panel.
     }
 
     const settingsCount = db

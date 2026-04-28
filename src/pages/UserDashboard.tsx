@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Camera, MapPin, Search, Grid, List, Play, Info, CloudSun } from 'lucide-react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
-import { io, Socket } from 'socket.io-client';
+import { useRealtime } from '@/src/lib/useRealtime';
 
 interface CameraData {
   id: number;
@@ -25,25 +25,22 @@ export default function UserDashboard() {
         setCameras(data);
         setLoading(false);
       });
-
-    const socket: Socket = io();
-
-    socket.on('camera:created', (newCamera: CameraData) => {
-      setCameras(prev => [...prev, newCamera]);
-    });
-
-    socket.on('camera:updated', (updatedCamera: CameraData) => {
-      setCameras(prev => prev.map(c => c.id === updatedCamera.id ? updatedCamera : c));
-    });
-
-    socket.on('camera:deleted', ({ id }: { id: number }) => {
-      setCameras(prev => prev.filter(c => c.id !== id));
-    });
-
-    return () => {
-      socket.disconnect();
-    };
   }, []);
+
+  useRealtime((event) => {
+    if (event.type === 'camera:created') {
+      const camera = event.payload as CameraData;
+      setCameras((prev) => (prev.some((item) => item.id === camera.id) ? prev : [...prev, camera]));
+    }
+    if (event.type === 'camera:updated' || event.type === 'camera:health') {
+      const camera = event.payload as CameraData;
+      setCameras((prev) => prev.map((item) => (item.id === camera.id ? camera : item)));
+    }
+    if (event.type === 'camera:deleted') {
+      const payload = event.payload as { id: number };
+      setCameras((prev) => prev.filter((item) => item.id !== payload.id));
+    }
+  });
 
   return (
     <div className="p-4 md:p-8">
@@ -102,12 +99,9 @@ export default function UserDashboard() {
                 className={`bg-white rounded-[32px] overflow-hidden border border-gray-100 shadow-sm group hover:shadow-md transition-all ${viewMode === 'list' ? 'flex items-center p-4 gap-4' : ''}`}
               >
                 <div className={`${viewMode === 'grid' ? 'aspect-video w-full' : 'w-32 h-20'} bg-gray-900 relative flex-shrink-0 rounded-2xl overflow-hidden`}>
-                  <img 
-                    src={`https://picsum.photos/seed/user-cam-${camera.id}/600/400`} 
-                    className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-                    alt={camera.name}
-                    referrerPolicy="no-referrer"
-                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Camera className="w-10 h-10 text-gray-700 opacity-80 group-hover:opacity-100 transition-opacity" />
+                  </div>
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
                   <Link 
                     href={`/stream/${camera.id}`}
