@@ -1,16 +1,1 @@
-{
-  "/CameraManagement": "pages/CameraManagement.html",
-  "/_app": "pages/_app.js",
-  "/Dashboard": "pages/Dashboard.html",
-  "/LandingPage": "pages/LandingPage.html",
-  "/ForgotPassword": "pages/ForgotPassword.html",
-  "/Register": "pages/Register.html",
-  "/NotificationCenter": "pages/NotificationCenter.html",
-  "/Settings": "pages/Settings.html",
-  "/SmartMap": "pages/SmartMap.html",
-  "/UserDashboard": "pages/UserDashboard.html",
-  "/LiveStream": "pages/LiveStream.html",
-  "/_error": "pages/_error.js",
-  "/_document": "pages/_document.js",
-  "/404": "pages/404.html"
-}
+{}
