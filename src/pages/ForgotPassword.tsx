@@ -38,17 +38,17 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex overflow-hidden">
+    <div className="min-h-screen bg-white dark:bg-slate-950 flex overflow-hidden transition-colors duration-300">
       {/* Left Side: Visual/Branding */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-emerald-600">
+      <div className="hidden lg:flex lg:w-1/2 relative bg-emerald-600 dark:bg-slate-900">
         <div className="absolute inset-0">
           <img 
             src="https://picsum.photos/seed/madiun-security/1200/1200" 
             alt="Madiun Security" 
-            className="w-full h-full object-cover opacity-40 mix-blend-overlay"
+            className="w-full h-full object-cover opacity-40 mix-blend-overlay dark:opacity-20"
             referrerPolicy="no-referrer"
           />
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/90 via-emerald-700/80 to-black/40"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/90 via-emerald-700/80 to-black/40 dark:from-slate-900/95 dark:via-slate-900/90 dark:to-black/60"></div>
         </div>
         
         <div className="relative z-10 w-full p-16 flex flex-col justify-between text-white">
@@ -70,43 +70,43 @@ export default function ForgotPassword() {
             <h1 className="text-5xl font-black leading-tight mb-6 tracking-tighter">
               Recover Your <br /> Access Securely.
             </h1>
-            <p className="text-emerald-50/80 text-lg max-w-md leading-relaxed font-medium">
+            <p className="text-emerald-50/80 dark:text-slate-300/80 text-lg max-w-md leading-relaxed font-medium">
               Jangan khawatir, kami akan membantu Anda mendapatkan kembali akses ke akun Anda.
             </p>
           </motion.div>
 
-          <div className="flex items-center gap-6 text-emerald-100/60 text-sm font-bold tracking-widest uppercase">
+          <div className="flex items-center gap-6 text-emerald-100/60 dark:text-slate-400/60 text-sm font-bold tracking-widest uppercase">
             <span>Real-time</span>
-            <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span>
+            <span className="w-1.5 h-1.5 bg-emerald-400 dark:bg-emerald-500 rounded-full"></span>
             <span>Secure</span>
-            <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span>
+            <span className="w-1.5 h-1.5 bg-emerald-400 dark:bg-emerald-500 rounded-full"></span>
             <span>Integrated</span>
           </div>
         </div>
       </div>
 
       {/* Right Side: Forgot Password Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50/50">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50/50 dark:bg-slate-950 transition-colors">
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
           className="w-full max-w-md"
         >
-          <div className="bg-white p-10 rounded-[40px] shadow-2xl shadow-emerald-900/5 border border-gray-100">
+          <div className="bg-white dark:bg-slate-900 p-10 rounded-[40px] shadow-2xl shadow-emerald-900/5 dark:shadow-black/30 border border-gray-100 dark:border-slate-800 transition-colors">
             <div className="mb-10">
-              <Link href="/login" className="inline-flex items-center gap-2 text-emerald-600 font-black text-xs uppercase tracking-widest mb-8 hover:translate-x-[-4px] transition-transform">
+              <Link href="/login" className="inline-flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-black text-xs uppercase tracking-widest mb-8 hover:translate-x-[-4px] transition-transform">
                 <ArrowLeft className="w-4 h-4" /> Kembali ke Login
               </Link>
-              <h2 className="text-3xl font-black text-gray-900 mb-2 tracking-tight">Lupa Password?</h2>
-              <p className="text-gray-500 font-medium">Masukkan username Anda untuk menerima instruksi pemulihan.</p>
+              <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">Lupa Password?</h2>
+              <p className="text-gray-500 dark:text-gray-400 font-medium">Masukkan username Anda untuk menerima instruksi pemulihan.</p>
             </div>
 
             {error && (
               <motion.div 
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 text-sm font-bold rounded-2xl flex items-center gap-3"
+                className="mb-6 p-4 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 text-red-600 dark:text-red-400 text-sm font-bold rounded-2xl flex items-center gap-3"
               >
                 <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
                 {error}
@@ -117,7 +117,7 @@ export default function ForgotPassword() {
               <motion.div 
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-6 p-4 bg-emerald-50 border border-emerald-100 text-emerald-600 text-sm font-bold rounded-2xl flex items-center gap-3"
+                className="mb-6 p-4 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-bold rounded-2xl flex items-center gap-3"
               >
                 <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
                 {message}
@@ -126,14 +126,14 @@ export default function ForgotPassword() {
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Username</label>
+                <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-2 ml-1">Username</label>
                 <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-emerald-500 transition-colors" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500 group-focus-within:text-emerald-500 transition-colors" />
                   <input
                     type="text"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold text-gray-900 outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all placeholder:text-gray-300"
+                    className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl text-sm font-bold text-gray-900 dark:text-white outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600"
                     placeholder="Masukkan username Anda"
                     required
                   />
@@ -159,9 +159,9 @@ export default function ForgotPassword() {
             </form>
           </div>
           
-          <div className="mt-8 flex items-center justify-center gap-2 text-gray-400">
+          <div className="mt-8 flex items-center justify-center gap-2 text-gray-400 dark:text-gray-600">
             <ShieldCheck className="w-4 h-4" />
-            <span className="text-[10px] font-bold uppercase tracking-widest">Sistem Terenkripsi & Aman</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest">Sistem Terenkripsi &amp; Aman</span>
           </div>
         </motion.div>
       </div>

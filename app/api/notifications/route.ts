@@ -9,7 +9,14 @@ export const dynamic = 'force-dynamic';
 
 export const GET = withErrorHandler(async (req: NextRequest) => {
   ensureRuntimeBootstrapped();
-  const notifications = notificationService.listNotifications();
+  const searchParams = req.nextUrl.searchParams;
+  const limitParam = searchParams.get('limit');
+  const offsetParam = searchParams.get('offset');
+  
+  const limit = limitParam ? parseInt(limitParam, 10) : undefined;
+  const offset = offsetParam ? parseInt(offsetParam, 10) : undefined;
+
+  const notifications = notificationService.listNotifications(limit, offset);
   return ok(notifications);
 });
 

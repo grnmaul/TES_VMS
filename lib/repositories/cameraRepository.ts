@@ -10,6 +10,7 @@ export interface CameraRecord {
   stream_url: string | null;
   hls_url: string | null;
   status: CameraStatus;
+  ai_enabled: number;
 }
 
 export interface CameraPayload {
@@ -19,6 +20,7 @@ export interface CameraPayload {
   stream_url: string | null;
   hls_url: string | null;
   status: CameraStatus;
+  ai_enabled?: number;
 }
 
 export class CameraRepository {
@@ -93,6 +95,17 @@ export class CameraRepository {
   updateHlsUrl(id: number, hlsUrl: string | null): CameraRecord | null {
     const db = getDatabase();
     const result = db.prepare('UPDATE cameras SET hls_url = ? WHERE id = ?').run(hlsUrl, id);
+    if (result.changes === 0) {
+      return null;
+    }
+    return this.findById(id);
+  }
+
+  updateAiEnabled(id: number, enabled: boolean): CameraRecord | null {
+    const db = getDatabase();
+    const result = db
+      .prepare('UPDATE cameras SET ai_enabled = ? WHERE id = ?')
+      .run(enabled ? 1 : 0, id);
     if (result.changes === 0) {
       return null;
     }

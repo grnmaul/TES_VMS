@@ -33,7 +33,19 @@ export function getDatabase() {
         ip_address TEXT,
         status TEXT DEFAULT 'online',
         stream_url TEXT,
-        hls_url TEXT
+        hls_url TEXT,
+        ai_enabled INTEGER DEFAULT 0
+      );
+
+      CREATE TABLE IF NOT EXISTS ai_detections (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        camera_id INTEGER,
+        detected_objects TEXT,
+        person_count INTEGER DEFAULT 0,
+        vehicle_count INTEGER DEFAULT 0,
+        confidence REAL DEFAULT 0,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (camera_id) REFERENCES cameras(id) ON DELETE CASCADE
       );
 
       CREATE TABLE IF NOT EXISTS notifications (
@@ -55,12 +67,25 @@ export function getDatabase() {
         night_mode INTEGER DEFAULT 1,
         motion_detection INTEGER DEFAULT 1,
         static_ip TEXT DEFAULT '192.168.1.100',
-        port TEXT DEFAULT '8080'
+        port TEXT DEFAULT '8080',
+        email_alerts INTEGER DEFAULT 0,
+        push_notifications INTEGER DEFAULT 1,
+        alert_sensitivity TEXT DEFAULT 'Medium'
       );
     `);
 
     if (!hasColumn(db, 'cameras', 'hls_url')) {
       db.exec('ALTER TABLE cameras ADD COLUMN hls_url TEXT');
+    }
+
+    if (!hasColumn(db, 'cameras', 'ai_enabled')) {
+      db.exec('ALTER TABLE cameras ADD COLUMN ai_enabled INTEGER DEFAULT 0');
+    }
+
+    if (!hasColumn(db, 'system_settings', 'email_alerts')) {
+      db.exec('ALTER TABLE system_settings ADD COLUMN email_alerts INTEGER DEFAULT 0');
+      db.exec('ALTER TABLE system_settings ADD COLUMN push_notifications INTEGER DEFAULT 1');
+      db.exec("ALTER TABLE system_settings ADD COLUMN alert_sensitivity TEXT DEFAULT 'Medium'");
     }
 
     // Seed initial admin if not exists

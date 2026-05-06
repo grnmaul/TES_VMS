@@ -36,6 +36,9 @@ export class SettingsService {
       motion_detection: asBooleanNumber(input.motion_detection, 'Motion detection'),
       static_ip: asString(input.static_ip, 'Static IP'),
       port: asString(input.port, 'Port'),
+      email_alerts: asBooleanNumber(input.email_alerts, 'Email alerts'),
+      push_notifications: asBooleanNumber(input.push_notifications, 'Push notifications'),
+      alert_sensitivity: asString(input.alert_sensitivity, 'Alert sensitivity'),
     });
   }
 }

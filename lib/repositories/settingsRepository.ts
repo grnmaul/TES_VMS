@@ -10,6 +10,9 @@ export interface SettingsRecord {
   motion_detection: number;
   static_ip: string;
   port: string;
+  email_alerts: number;
+  push_notifications: number;
+  alert_sensitivity: string;
 }
 
 export class SettingsRepository {
@@ -26,7 +29,10 @@ export class SettingsRepository {
           night_mode,
           motion_detection,
           static_ip,
-          port
+          port,
+          email_alerts,
+          push_notifications,
+          alert_sensitivity
         FROM system_settings WHERE id = 1`
       )
       .get() as SettingsRecord;
@@ -44,7 +50,10 @@ export class SettingsRepository {
            night_mode = ?,
            motion_detection = ?,
            static_ip = ?,
-           port = ?
+           port = ?,
+           email_alerts = ?,
+           push_notifications = ?,
+           alert_sensitivity = ?
        WHERE id = 1`
     ).run(
       payload.system_language,
@@ -55,7 +64,10 @@ export class SettingsRepository {
       payload.night_mode,
       payload.motion_detection,
       payload.static_ip,
-      payload.port
+      payload.port,
+      payload.email_alerts,
+      payload.push_notifications,
+      payload.alert_sensitivity
     );
 
     return this.getSettings();

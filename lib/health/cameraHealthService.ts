@@ -51,12 +51,13 @@ class CameraHealthService {
         if (realStatus !== camera.status) {
           const updated = this.cameraRepository.updateStatus(camera.id, realStatus);
           if (updated) {
-            go2rtcService.sync(updated);
+            // We only broadcast the health status to the UI.
+            // We DO NOT sync to go2rtc here, because go2rtc has its own internal
+            // stream reconnection logic. Aggressively removing/adding streams
+            // causes the cameras to suddenly die or glitch.
             wsHub.broadcast({ type: 'camera:health', payload: updated });
           }
-          return;
         }
-        go2rtcService.sync(camera);
       })
     );
   }

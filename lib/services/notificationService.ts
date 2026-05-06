@@ -12,8 +12,8 @@ function isNotificationType(value: unknown): value is NotificationType {
 export class NotificationService {
   constructor(private readonly notificationRepository: NotificationRepository) {}
 
-  listNotifications(): NotificationRecord[] {
-    return this.notificationRepository.listAll();
+  listNotifications(limit?: number, offset?: number): NotificationRecord[] {
+    return this.notificationRepository.listAll(limit, offset);
   }
 
   createNotification(
@@ -40,6 +40,14 @@ export class NotificationService {
 
   clearAll(): { deleted: number } {
     return { deleted: this.notificationRepository.clearAll() };
+  }
+
+  deleteNotification(id: number): { deleted: number } {
+    return { deleted: this.notificationRepository.deleteById(id) };
+  }
+
+  markNotificationAsRead(id: number): { updated: number } {
+    return { updated: this.notificationRepository.markAsRead(id) };
   }
 }
 

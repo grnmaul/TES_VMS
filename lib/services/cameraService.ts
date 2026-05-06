@@ -86,6 +86,19 @@ export class CameraService {
     return { success: true };
   }
 
+  toggleAI(id: unknown, enabled: unknown): CameraRecord {
+    const cameraId = parseId(id);
+    const isEnabled = Boolean(enabled);
+    
+    const updated = this.cameraRepository.updateAiEnabled(cameraId, isEnabled);
+    if (!updated) {
+      throw new AppError('Camera not found', 404);
+    }
+
+    wsHub.broadcast({ type: 'camera:updated', payload: updated });
+    return updated;
+  }
+
   private buildPayload(input: {
     name: unknown;
     location: unknown;

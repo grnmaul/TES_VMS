@@ -12,8 +12,15 @@ export interface NotificationRecord {
 }
 
 export class NotificationRepository {
-  listAll(): NotificationRecord[] {
+  listAll(limit?: number, offset?: number): NotificationRecord[] {
     const db = getDatabase();
+    
+    if (limit !== undefined && offset !== undefined) {
+      return db
+        .prepare('SELECT * FROM notifications ORDER BY timestamp DESC LIMIT ? OFFSET ?')
+        .all(limit, offset) as NotificationRecord[];
+    }
+    
     return db
       .prepare('SELECT * FROM notifications ORDER BY timestamp DESC')
       .all() as NotificationRecord[];
@@ -39,6 +46,18 @@ export class NotificationRepository {
   clearAll(): number {
     const db = getDatabase();
     const result = db.prepare('DELETE FROM notifications').run();
+    return result.changes;
+  }
+
+  deleteById(id: number): number {
+    const db = getDatabase();
+    const result = db.prepare('DELETE FROM notifications WHERE id = ?').run(id);
+    return result.changes;
+  }
+
+  markAsRead(id: number): number {
+    const db = getDatabase();
+    const result = db.prepare('UPDATE notifications SET is_read = 1 WHERE id = ?').run(id);
     return result.changes;
   }
 }

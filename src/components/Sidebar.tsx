@@ -1,6 +1,6 @@
 'use client';
 
-import { LayoutDashboard, Camera, Bell, Settings, LogOut, User as UserIcon, Map, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Camera, Bell, Settings, LogOut, User as UserIcon, Map, Menu, X, Sun, Moon } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
@@ -8,6 +8,8 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { ASSETS } from '../assets/images';
 import { useState, useEffect } from 'react';
+
+import { useNotificationContext } from '@/src/context/NotificationContext';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -17,12 +19,39 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { logout, user } = useAuth();
+  const { unreadCount } = useNotificationContext();
   const [isOpen, setIsOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Close sidebar when route changes on mobile
   useEffect(() => {
     setIsOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      setIsDarkMode(true);
+      document.documentElement.classList.add('dark');
+    } else {
+      setIsDarkMode(false);
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    setIsDarkMode((prev) => {
+      const newTheme = !prev;
+      if (newTheme) {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      }
+      return newTheme;
+    });
+  };
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', roles: ['admin', 'user'] },
@@ -42,7 +71,7 @@ export default function Sidebar() {
       {/* Mobile Toggle Button */}
       <button 
         onClick={() => setIsOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-40 p-2 bg-white rounded-xl shadow-lg border border-gray-100 text-gray-600 hover:text-emerald-600 transition-all"
+        className="lg:hidden fixed top-4 left-4 z-40 p-2 bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-gray-100 dark:border-slate-800 text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all"
       >
         <Menu className="w-6 h-6" />
       </button>
@@ -57,20 +86,20 @@ export default function Sidebar() {
 
       {/* Sidebar Container */}
       <div className={cn(
-        "w-64 h-screen bg-white border-r border-gray-200 flex flex-col fixed left-0 top-0 z-50 transition-transform duration-300 lg:translate-x-0",
+        "w-64 h-screen bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800 flex flex-col fixed left-0 top-0 z-50 transition-transform duration-300 lg:translate-x-0",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="p-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src={ASSETS.logo} alt="Logo" className="w-10 h-10 object-contain" referrerPolicy="no-referrer" />
             <div>
-              <h1 className="text-sm font-bold text-gray-900 leading-tight">VMS Kota</h1>
-              <p className="text-xs text-gray-500">Madiun</p>
+              <h1 className="text-sm font-bold text-gray-900 dark:text-white leading-tight">VMS Kota</h1>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Madiun</p>
             </div>
           </div>
           <button 
             onClick={() => setIsOpen(false)}
-            className="lg:hidden p-2 text-gray-400 hover:text-gray-600"
+            className="lg:hidden p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
           >
             <X className="w-5 h-5" />
           </button>
@@ -84,29 +113,43 @@ export default function Sidebar() {
               className={cn(
                 "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors",
                 pathname === item.path
-                  ? "bg-emerald-50 text-emerald-600"
-                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                  ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                  : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white"
               )}
             >
-              <item.icon className="w-5 h-5" />
+              <div className="relative">
+                <item.icon className="w-5 h-5" />
+                {item.label === 'Notifications' && unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white ring-2 ring-white">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </div>
               {item.label}
             </Link>
           ))}
         </nav>
 
-        <div className="p-4 border-t border-gray-100">
+        <div className="p-4 border-t border-gray-100 dark:border-slate-800">
           <div className="flex items-center gap-3 px-4 py-3 mb-2">
-            <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-              <UserIcon className="w-4 h-4 text-gray-500" />
+            <div className="w-8 h-8 bg-gray-100 dark:bg-slate-800 rounded-full flex items-center justify-center">
+              <UserIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">{user?.full_name}</p>
-              <p className="text-xs text-gray-500 truncate capitalize">{user?.role}</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{user?.full_name}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate capitalize">{user?.role}</p>
             </div>
+            <button 
+              onClick={toggleTheme}
+              className="p-2 rounded-xl bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors shrink-0"
+              title="Toggle Theme"
+            >
+              {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
           </div>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
+            className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
           >
             <LogOut className="w-5 h-5" />
             Logout

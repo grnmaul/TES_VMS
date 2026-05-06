@@ -15,6 +15,7 @@ interface AuthContextType {
   login: (token: string, user: User) => void;
   logout: () => void;
   isAuthenticated: boolean;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,6 +23,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const savedToken = localStorage.getItem('vms_token');
@@ -30,6 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setToken(savedToken);
       setUser(JSON.parse(savedUser));
     }
+    setIsLoading(false);
   }, []);
 
   const login = (newToken: string, newUser: User) => {
@@ -47,7 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated: !!token }}>
+    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated: !!token, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

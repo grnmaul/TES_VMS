@@ -11,9 +11,11 @@ interface RequireAuthProps {
 
 export default function RequireAuth({ children, roles }: RequireAuthProps) {
   const router = useRouter();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isLoading } = useAuth();
 
   useEffect(() => {
+    if (isLoading) return;
+    
     if (!isAuthenticated) {
       router.replace('/login');
       return;
@@ -21,9 +23,9 @@ export default function RequireAuth({ children, roles }: RequireAuthProps) {
     if (roles && user && !roles.includes(user.role)) {
       router.replace('/dashboard');
     }
-  }, [isAuthenticated, roles, router, user]);
+  }, [isAuthenticated, roles, router, user, isLoading]);
 
-  if (!isAuthenticated) {
+  if (isLoading || !isAuthenticated) {
     return null;
   }
   if (roles && user && !roles.includes(user.role)) {
