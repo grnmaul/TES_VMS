@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Plus, MoreVertical, Edit2, Trash2, ExternalLink, Camera as CameraIcon, Globe, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Plus, MoreVertical, Edit2, Trash2, ExternalLink, Camera as CameraIcon, Globe, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useRealtime } from '@/src/lib/useRealtime';
+import CompactPagination from '@/src/components/CompactPagination';
 
 interface CameraData {
   id: number;
@@ -178,8 +179,9 @@ export default function CameraManagement() {
         </div>
 
         {/* INTERNAL SCROLL ADDED */}
-        <div className="overflow-y-auto max-h-[600px] custom-scrollbar">
-          <table className="w-full text-left">
+        <div className="overflow-x-auto custom-scrollbar">
+          <div className="min-w-[1000px]">
+            <table className="w-full text-left">
             <thead className="sticky top-0 bg-gray-50/90 dark:bg-slate-800/90 backdrop-blur-md z-20">
               <tr className="text-[10px] uppercase tracking-widest font-black text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-slate-800">
                 <th className="px-8 py-6">Camera Details</th>
@@ -254,9 +256,11 @@ export default function CameraManagement() {
                   </td>
                 </tr>
               ))}
-            </tbody>
-          </table>
-          {paginatedCameras.length === 0 && (
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {paginatedCameras.length === 0 && (
             <div className="py-32 text-center">
               <div className="w-20 h-20 bg-gray-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Search className="w-10 h-10 text-gray-200 dark:text-slate-700" />
@@ -264,47 +268,24 @@ export default function CameraManagement() {
               <p className="text-sm font-black text-gray-400 uppercase tracking-widest">No devices found matching your search</p>
             </div>
           )}
-        </div>
 
         {/* FUNCTIONAL PAGINATION ADDED */}
         <div className="p-8 bg-gray-50/50 dark:bg-slate-800/30 border-t border-gray-50 dark:border-slate-800/50 flex flex-col sm:flex-row justify-between items-center gap-6">
           <p className="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">
             Showing <span className="text-gray-900 dark:text-white">{paginatedCameras.length}</span> of <span className="text-gray-900 dark:text-white">{filteredCameras.length}</span> Cameras
           </p>
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="p-3 border border-gray-200 dark:border-slate-700 rounded-2xl hover:bg-white dark:hover:bg-slate-800 disabled:opacity-30 transition-all shadow-sm group"
-            >
-              <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-emerald-500" />
-            </button>
-            <div className="flex items-center gap-2 px-4">
-              {[...Array(totalPages)].map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`w-11 h-11 rounded-2xl text-xs font-black transition-all ${currentPage === i + 1 ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/20 scale-110' : 'text-gray-400 hover:text-emerald-500 hover:bg-white dark:hover:bg-slate-800'}`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
-            <button 
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="p-3 border border-gray-200 dark:border-slate-700 rounded-2xl hover:bg-white dark:hover:bg-slate-800 disabled:opacity-30 transition-all shadow-sm group"
-            >
-              <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-emerald-500" />
-            </button>
-          </div>
+          <CompactPagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </div>
       </div>
 
       {/* Modal - Redesigned */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-md">
-          <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden border border-gray-100 dark:border-slate-800 animate-in fade-in zoom-in duration-300">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 dark:bg-black/80 backdrop-blur-md">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[32px] sm:rounded-[40px] shadow-2xl overflow-hidden border border-gray-100 dark:border-slate-800 animate-in fade-in zoom-in duration-300 max-h-[95vh] overflow-y-auto">
             <div className="p-8 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center bg-gray-50/50 dark:bg-slate-800/30">
               <div>
                 <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">{editingCamera ? 'Update Camera' : 'Add New Camera'}</h3>

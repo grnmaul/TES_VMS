@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useRealtime } from '@/src/lib/useRealtime';
+import { useAuth } from './AuthContext';
 
 interface Notification {
   id: number;
@@ -15,6 +16,7 @@ interface Notification {
 
 interface NotificationContextType {
   unreadCount: number;
+  setUnreadCount: React.Dispatch<React.SetStateAction<number>>;
   decrementUnreadCount: () => void;
   resetUnreadCount: () => void;
   refreshUnreadCount: () => Promise<void>;
@@ -22,6 +24,7 @@ interface NotificationContextType {
 
 const NotificationContext = createContext<NotificationContextType>({
   unreadCount: 0,
+  setUnreadCount: () => {},
   decrementUnreadCount: () => {},
   resetUnreadCount: () => {},
   refreshUnreadCount: async () => {},
@@ -31,10 +34,15 @@ export const useNotificationContext = () => useContext(NotificationContext);
 
 export const NotificationProvider = ({ children }: { children: React.ReactNode }) => {
   const [unreadCount, setUnreadCount] = useState(0);
+  const { token } = useAuth();
 
   const refreshUnreadCount = async () => {
+    if (!token) return;
     try {
-      const res = await fetch('/api/notifications', { cache: 'no-store' });
+      const res = await fetch('/api/notifications', { 
+        cache: 'no-store',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       const data = await res.json();
       const count = data.filter((n: Notification) => n.is_read === 0).length;
       setUnreadCount(count);
@@ -44,8 +52,10 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
   };
 
   useEffect(() => {
-    refreshUnreadCount();
-  }, []);
+    if (token) {
+      refreshUnreadCount();
+    }
+  }, [token]);
 
   useRealtime((event) => {
     if (event.type === 'notification:new') {
@@ -76,7 +86,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
   const resetUnreadCount = () => setUnreadCount(0);
 
   return (
-    <NotificationContext.Provider value={{ unreadCount, decrementUnreadCount, resetUnreadCount, refreshUnreadCount }}>
+    <NotificationContext.Provider value={{ unreadCount, setUnreadCount, decrementUnreadCount, resetUnreadCount, refreshUnreadCount }}>
       {children}
     </NotificationContext.Provider>
   );

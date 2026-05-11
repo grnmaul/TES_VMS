@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Camera, MapPin, Search, Grid, List, Play, Info, CloudSun, Brain, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Camera, MapPin, Search, Grid, List, Play, Info, CloudSun, Brain, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 import { useRealtime } from '@/src/lib/useRealtime';
+import CompactPagination from '@/src/components/CompactPagination';
 
 interface CameraData {
   id: number;
@@ -21,6 +22,7 @@ export default function UserDashboard() {
   const [currentDate, setCurrentDate] = useState('');
   const [weather, setWeather] = useState({ temp: 32, desc: 'Cerah Berawan' });
   const [news, setNews] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 6;
 
@@ -49,8 +51,8 @@ export default function UserDashboard() {
       })
       .catch(err => console.error('Error fetching weather:', err));
 
-    // Fetch Madiun Traffic News
-    const targetUrl = 'https://news.google.com/rss/search?q=lalu+lintas+Madiun&hl=id&gl=ID&ceid=ID:id';
+    // Fetch Madiun Traffic News - Improved query
+    const targetUrl = 'https://news.google.com/rss/search?q=lalu+lintas+Madiun+terkini&hl=id&gl=ID&ceid=ID:id';
     fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(targetUrl)}`)
       .then(res => res.json())
       .then(data => {
@@ -83,23 +85,30 @@ export default function UserDashboard() {
     }
   });
 
-  const totalPages = Math.ceil(cameras.length / ITEMS_PER_PAGE);
-  const paginatedCameras = cameras.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  // Filter Logic
+  const filteredCameras = cameras.filter(camera => 
+    camera.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    camera.location.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  const handleNext = () => {
-    if (currentPage < totalPages) setCurrentPage(prev => prev + 1);
-  };
+  const totalPages = Math.ceil(filteredCameras.length / ITEMS_PER_PAGE);
+  const paginatedCameras = filteredCameras.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
-  const handlePrev = () => {
-    if (currentPage > 1) setCurrentPage(prev => prev - 1);
-  };
+  // Reset to first page when searching
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   // Adjust page if cameras count changes
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
       setCurrentPage(totalPages);
     }
-  }, [cameras.length, totalPages, currentPage]);
+  }, [filteredCameras.length, totalPages, currentPage]);
+
+  const handleCallEmergency = () => {
+    window.open('tel:112', '_self');
+  };
 
   return (
     <div className="p-4 md:p-8">
@@ -130,7 +139,10 @@ export default function UserDashboard() {
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <Camera className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
-              Available CCTV Streams
+              {searchQuery ? `Hasil Pencarian untuk "${searchQuery}"` : 'Available CCTV Streams'}
+              <span className="text-[10px] bg-gray-100 dark:bg-slate-800 px-2 py-1 rounded-full text-gray-500 font-black ml-2">
+                {filteredCameras.length}
+              </span>
             </h2>
             <div className="flex bg-gray-100 dark:bg-slate-800 p-1 rounded-xl transition-colors">
               <button 
@@ -149,106 +161,106 @@ export default function UserDashboard() {
           </div>
 
           <div className={`overflow-y-auto pr-2 custom-scrollbar ${viewMode === 'grid' ? "max-h-[700px]" : "max-h-[600px]"}`}>
-            <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 gap-6 pb-4" : "space-y-4 pb-4"}>
-              {paginatedCameras.map((camera, i) => (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: i * 0.05 }}
-                  key={camera.id}
-                  className={`bg-white dark:bg-slate-900 rounded-[32px] overflow-hidden border border-gray-100 dark:border-slate-800 shadow-sm group hover:shadow-md transition-all ${viewMode === 'list' ? 'flex items-center p-4 gap-4' : ''}`}
-                >
-                  <div className={`${viewMode === 'grid' ? 'aspect-video w-full' : 'w-32 h-20'} bg-gray-900 relative flex-shrink-0 rounded-2xl overflow-hidden`}>
-                    {/* Placeholder Background Array */}
-                    <div className="absolute inset-0 bg-slate-900 flex items-center justify-center overflow-hidden">
-                      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:20px_20px]"></div>
-                      <Camera className="w-10 h-10 text-emerald-500/30 opacity-80 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                    <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
-                    {/* AI Badge — selalu aktif otomatis */}
-                    <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 bg-purple-600/90 backdrop-blur-sm rounded-full">
-                      <Brain className="w-2.5 h-2.5 text-white" />
-                      <span className="text-[9px] font-bold text-white">AI</span>
-                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                    </div>
-                    <Link 
-                      href={`/live-stream/${camera.id}`}
-                      className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <div className="w-10 h-10 bg-emerald-500 text-white rounded-full flex items-center justify-center shadow-lg">
-                        <Play className="w-4 h-4 fill-current" />
+            {filteredCameras.length === 0 ? (
+              <div className="py-20 text-center">
+                <Search className="w-12 h-12 text-gray-200 dark:text-slate-800 mx-auto mb-4" />
+                <p className="text-gray-500 dark:text-gray-400 font-bold">Tidak ada CCTV ditemukan di lokasi tersebut.</p>
+              </div>
+            ) : (
+              <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 gap-6 pb-4" : "space-y-4 pb-4"}>
+                {paginatedCameras.map((camera, i) => (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.05 }}
+                    key={camera.id}
+                    className={`bg-white dark:bg-slate-900 rounded-[32px] overflow-hidden border border-gray-100 dark:border-slate-800 shadow-sm group hover:shadow-md transition-all ${viewMode === 'list' ? 'flex items-center p-4 gap-4' : ''}`}
+                  >
+                    <div className={`${viewMode === 'grid' ? 'aspect-video w-full' : 'w-32 h-20'} bg-gray-900 relative flex-shrink-0 rounded-2xl overflow-hidden`}>
+                      <div className="absolute inset-0 bg-slate-900 flex items-center justify-center overflow-hidden">
+                        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:20px_20px]"></div>
+                        <Camera className="w-10 h-10 text-emerald-500/30 opacity-80 group-hover:opacity-100 transition-opacity" />
                       </div>
-                    </Link>
-                  </div>
-
-                  <div className={viewMode === 'grid' ? "p-6" : "flex-1"}>
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h3 className="text-sm font-bold text-gray-900 dark:text-white">{camera.name}</h3>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                          <MapPin className="w-3 h-3" /> {camera.location}
-                        </p>
+                      <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
+                      <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 bg-purple-600/90 backdrop-blur-sm rounded-full">
+                        <Brain className="w-2.5 h-2.5 text-white" />
+                        <span className="text-[9px] font-bold text-white">AI</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                       </div>
-                      <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase ${camera.status === 'online' ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400'}`}>
-                        {camera.status}
-                      </span>
-                    </div>
-                    {viewMode === 'grid' && (
                       <Link 
                         href={`/live-stream/${camera.id}`}
-                        className="mt-4 w-full py-2 bg-gray-50 dark:bg-slate-800 text-gray-600 dark:text-gray-300 text-xs font-bold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all flex items-center justify-center gap-2"
+                        className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                       >
-                        Buka Stream <Play className="w-3 h-3" />
+                        <div className="w-10 h-10 bg-emerald-500 text-white rounded-full flex items-center justify-center shadow-lg">
+                          <Play className="w-4 h-4 fill-current" />
+                        </div>
                       </Link>
-                    )}
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+                    </div>
+
+                    <div className={viewMode === 'grid' ? "p-6" : "flex-1"}>
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h3 className="text-sm font-bold text-gray-900 dark:text-white">{camera.name}</h3>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                            <MapPin className="w-3 h-3" /> {camera.location}
+                          </p>
+                        </div>
+                        <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase ${camera.status === 'online' ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400'}`}>
+                          {camera.status}
+                        </span>
+                      </div>
+                      {viewMode === 'grid' && (
+                        <Link 
+                          href={`/live-stream/${camera.id}`}
+                          className="mt-4 w-full py-2 bg-gray-50 dark:bg-slate-800 text-gray-600 dark:text-gray-300 text-xs font-bold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all flex items-center justify-center gap-2"
+                        >
+                          Buka Stream <Play className="w-3 h-3" />
+                        </Link>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="mt-8 flex items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-[24px] border border-gray-100 dark:border-slate-800 shadow-sm transition-colors">
-              <button
-                onClick={handlePrev}
-                disabled={currentPage === 1}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 disabled:opacity-30 disabled:hover:text-gray-600 transition-all"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                Sebelumnya
-              </button>
-              
-              <div className="flex items-center gap-2">
-                {[...Array(totalPages)].map((_, i) => (
-                  <button
-                    key={i + 1}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className={`w-8 h-8 rounded-full text-xs font-bold transition-all ${
-                      currentPage === i + 1
-                        ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20'
-                        : 'text-gray-400 dark:text-gray-500 hover:text-emerald-600 dark:hover:text-emerald-400'
-                    }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-              </div>
-
-              <button
-                onClick={handleNext}
-                disabled={currentPage === totalPages}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 disabled:opacity-30 disabled:hover:text-gray-600 transition-all"
-              >
-                Selanjutnya
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          )}
+          <div className="mt-8 flex items-center justify-center bg-white dark:bg-slate-900 p-4 rounded-[32px] border border-gray-100 dark:border-slate-800 shadow-sm transition-colors">
+            <CompactPagination 
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </div>
         </div>
 
         {/* User Sidebar */}
         <div className="space-y-8">
+          
+          {/* Search Bar - Positioned at Top Right Column */}
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-sm">
+             <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Search className="w-4 h-4 text-gray-400 group-focus-within:text-emerald-500 transition-colors" />
+              </div>
+              <input
+                type="text"
+                placeholder="Cari lokasi CCTV..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-10 py-3 bg-gray-50 dark:bg-slate-800 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-emerald-500 rounded-2xl text-sm outline-none transition-all text-gray-900 dark:text-white"
+              />
+              {searchQuery && (
+                <button 
+                  onClick={() => setSearchQuery('')}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-red-500"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
           {news.length > 0 && (
             <div className="bg-white dark:bg-slate-900 p-8 rounded-[40px] border border-gray-100 dark:border-slate-800 shadow-sm transition-colors">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
@@ -276,7 +288,10 @@ export default function UserDashboard() {
               <p className="text-sm text-emerald-50 dark:text-gray-400 mb-8 leading-relaxed">
                 Jika Anda melihat kejadian darurat melalui CCTV, segera hubungi layanan darurat Kota Madiun.
               </p>
-              <button className="w-full py-4 bg-white dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold rounded-2xl hover:bg-emerald-50 dark:hover:bg-emerald-500/30 transition-all shadow-lg dark:shadow-none border border-transparent dark:border-emerald-500/30">
+              <button 
+                onClick={handleCallEmergency}
+                className="w-full py-4 bg-white dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold rounded-2xl hover:bg-emerald-50 dark:hover:bg-emerald-500/30 transition-all shadow-lg dark:shadow-none border border-transparent dark:border-emerald-500/30"
+              >
                 Hubungi Call Center 112
               </button>
             </div>

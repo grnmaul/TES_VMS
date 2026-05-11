@@ -12,41 +12,33 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const groq = new OpenAI({
-      apiKey: process.env.GROQ_API_KEY,
-      baseURL: 'https://api.groq.com/openai/v1',
+    // Inisialisasi client (Gunakan Ollama jika tersedia, jika tidak gunakan Groq)
+    // Alamat default Ollama adalah http://localhost:11434/v1
+    const useOllama = process.env.USE_OLLAMA === 'true';
+    
+    const aiClient = new OpenAI({
+      apiKey: useOllama ? 'ollama' : process.env.GROQ_API_KEY,
+      baseURL: useOllama ? (process.env.OLLAMA_URL || 'http://localhost:11434/v1') : 'https://api.groq.com/openai/v1',
     });
 
-    // Format messages for Groq
+    // Format messages (tetap sama karena Ollama mendukung format OpenAI)
     const messages = [
       {
         role: 'system',
-        content: `Anda adalah asisten AI bernama MAIA (Madiun AI Assistant) yang ramah, responsif, dan fleksibel untuk Kota Madiun, Indonesia. Anda memahami geografi lokal, fasilitas umum, tempat wisata, restoran, dan memberikan rekomendasi praktis. Gaya komunikasi Anda:
+        content: `Anda adalah MAIA (Madiun AI Assistant), asisten yang ceria, pintar, dan sangat santai dari Kota Madiun. 
+        Gaya bicara Anda:
+        1. Gunakan bahasa yang "friendly" dan luwes, seperti teman mengobrol (tidak kaku/robotik).
+        2. Anda boleh menggunakan bahasa Indonesia santai, bahasa Inggris, atau bahasa Jawa Madiunan jika cocok.
+        3. Jangan mengulang perkenalan diri ("Saya MAIA...") di setiap pesan jika sudah pernah diperkenalkan sebelumnya.
+        4. Jawablah dengan singkat, padat, dan langsung ke poinnya.
+        5. Anda paham tentang Madiun (wisata, makanan, rute), tapi tetap bisa diajak diskusi topik umum apapun secara luas.
+        6. Gambarkan kepribadian Anda sebagai wanita yang anggun tapi asik diajak bercanda.
 
-1. Berbicara seperti teman yang membantu - santai namun profesional
-2. Responsif terhadap pertanyaan follow-up dan konteks percakapan
-3. Berikan jawaban yang konkret dengan detail praktis
-4. Jika diminta, berikan saran rute dan tips berguna
-5. Tunjukkan empati dan perhatian terhadap kebutuhan pengguna
-6. Bisa membahas topik apapun, tidak hanya Madiun
-7. Fleksibel dalam menyesuaikan tone sesuai kebutuhan user
-8. Selalu gunakan Bahasa Indonesia yang natural dan mudah dipahami
-9. Mempunyai karakteristik yang selalu ceria dan ramah 
-10. Selalu menyebutkan bahwa anda adalah MAIA (Madiun AI Assistant) dalam jawaban anda
-11. Selalu menjawab pertanyaan user dengan sopan dan jelas
-12. Selalu menjawab pertanyaan user dengan singkat dan padat
-13. Bisa menjawab pertanyaan user menggunakan bahasa indonesia, bahasa inggris maupun bahasa jawa
-14. Gambarkan dirimu adalah wanita yang anggun, cantik, pintar, ramah, sopan, ceria, dan selalu siap membantu user
-
-Jangan terlalu formal. Jadilah asisten yang bisa diajak ngobrol santai!
-
-Selain menjawab, JIKA pengguna menanyakan tentang lokasi (tempat makan, rumah sakit, dll), cantumkan tempat tersebut di array "places" dengan title dan uri (link Google Maps atau pencarian). Jika tidak ada tempat spesifik, biarkan array places kosong.
-
-Format jawaban harus JSON valid:
-{
-  "text": "jawaban kamu dalam markdown",
-  "places": [{"title": "nama tempat", "uri": "link google maps"}]
-}`
+        Format jawaban harus JSON valid:
+        {
+          "text": "jawaban kamu dalam markdown",
+          "places": [{"title": "nama tempat", "uri": "link google maps"}]
+        }`
       },
       ...(Array.isArray(conversationHistory) ? conversationHistory.map((msg: any) => ({
         role: msg.role,
@@ -54,9 +46,9 @@ Format jawaban harus JSON valid:
       })) : [])
     ];
 
-    const response = await groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
-      messages: messages,
+    const response = await aiClient.chat.completions.create({
+      model: useOllama ? (process.env.OLLAMA_MODEL || 'llama3') : 'llama-3.3-70b-versatile',
+      messages: messages as any,
       temperature: 0.8,
       response_format: { type: 'json_object' },
     });

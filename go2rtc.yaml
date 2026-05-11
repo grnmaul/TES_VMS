@@ -17,6 +17,8 @@ streams:
     - rtsp://streaming:Streaming2025@10.10.123.28:554/Streaming/Channels/102
   camera-16:
     - rtsp://admin:@Kominfo2025@10.10.122.189:554/
+  camera-18:
+    - rtsp://streaming:Streaming2025@10.10.122.158:554/Streaming/Channels/102
   camera-19:
     - rtsp://streaming:Streaming2025@10.10.123.33:554/Streaming/Channels/102
   camera-20:

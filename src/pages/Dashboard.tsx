@@ -7,6 +7,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useRealtime } from '@/src/lib/useRealtime';
 
+import CompactPagination from '@/src/components/CompactPagination';
+import { Cpu, HardDrive, Zap, RefreshCw } from 'lucide-react';
+
 interface CameraData {
   id: number;
   name: string;
@@ -17,11 +20,11 @@ interface CameraData {
 }
 
 interface NotificationData {
-  id: string;
+  id: number;
   title: string;
   message: string;
   type: 'info' | 'warning' | 'error' | 'success';
-  read: boolean;
+  is_read: number;
   timestamp: string;
 }
 
@@ -73,7 +76,7 @@ export default function Dashboard() {
     }
   });
 
-  const unreadAlerts = notifications.filter(n => !n.read).length;
+  const unreadAlerts = notifications.filter(n => n.is_read === 0).length;
 
   const filteredCameras = cameras.filter(c => 
     c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -92,6 +95,15 @@ export default function Dashboard() {
     { label: 'AI YOLO Aktif', value: cameras.filter(c => c.ai_enabled).length, icon: Brain, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-500/10' },
   ];
 
+  const getAlertIcon = (type: string) => {
+    switch (type) {
+      case 'warning': return <AlertTriangle className="w-5 h-5" />;
+      case 'error': return <Activity className="w-5 h-5" />;
+      case 'success': return <CheckCircle2 className="w-5 h-5" />;
+      default: return <Bell className="w-5 h-5" />;
+    }
+  };
+
   return (
     <div className="p-4 md:p-8 max-w-[1600px] mx-auto">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
@@ -99,7 +111,6 @@ export default function Dashboard() {
           <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">Admin Monitoring System</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">Control center for Kota Madiun surveillance network</p>
         </div>
-        {/* Search button moved from here to inventory section as requested */}
         <div className="flex items-center gap-4 bg-white dark:bg-slate-900 px-6 py-3 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm transition-colors">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></div>
@@ -109,7 +120,7 @@ export default function Dashboard() {
       </header>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6 mb-8">
         {stats.map((stat, i) => (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -138,7 +149,7 @@ export default function Dashboard() {
               Live Monitoring Feed
             </h2>
             <button 
-              onClick={() => router.push('/stream')} 
+              onClick={() => router.push('/live-stream')} 
               className="px-4 py-1.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold rounded-lg hover:bg-emerald-500 hover:text-white transition-all border border-transparent hover:border-emerald-500"
             >
               View Full Feed
@@ -161,7 +172,6 @@ export default function Dashboard() {
                       CAM-{camera.id}
                     </span>
                   </div>
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
                   <Link 
                     href={`/live-stream/${camera.id}`}
                     className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
@@ -209,12 +219,12 @@ export default function Dashboard() {
                     key={alert.id} 
                     className="group relative flex gap-4 p-4 rounded-3xl bg-gray-50 dark:bg-slate-800/30 border border-gray-100 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800 transition-all hover:shadow-md cursor-pointer"
                   >
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm ${
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${
                       alert.type === 'warning' ? 'bg-orange-500 text-white' : 
                       alert.type === 'error' ? 'bg-red-500 text-white' : 
                       alert.type === 'success' ? 'bg-emerald-500 text-white' : 'bg-blue-500 text-white'
                     }`}>
-                      <AlertTriangle className="w-6 h-6" />
+                      {getAlertIcon(alert.type)}
                     </div>
                     <div className="overflow-hidden">
                       <div className="flex justify-between items-start">
@@ -223,7 +233,7 @@ export default function Dashboard() {
                       </div>
                       <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-2 leading-relaxed">{alert.message}</p>
                     </div>
-                    {!alert.read && <div className="absolute top-3 right-3 w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />}
+                    {alert.is_read === 0 && <div className="absolute top-3 right-3 w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />}
                   </motion.div>
                 ))}
               </AnimatePresence>
@@ -241,20 +251,43 @@ export default function Dashboard() {
             <button onClick={() => router.push('/notifications')} className="w-full mt-8 py-4 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-emerald-500 hover:text-white transition-all border border-gray-200 dark:border-slate-800">
               View All Alerts
             </button>
-            <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
           </div>
 
-          <div className="bg-emerald-600 dark:bg-slate-900 p-8 rounded-[40px] border border-transparent dark:border-slate-800 text-white shadow-xl shadow-emerald-100 dark:shadow-none relative overflow-hidden transition-colors">
+          {/* System Health & Quick Actions */}
+          <div className="bg-slate-900 p-8 rounded-[40px] border border-slate-800 text-white shadow-xl relative overflow-hidden">
             <div className="relative z-10">
-              <h3 className="text-xl font-bold mb-4">Quick Settings</h3>
-              <p className="text-sm text-emerald-50 dark:text-gray-400 mb-8 leading-relaxed">
-                Need to reconfigure cameras or system settings? Go to management center.
-              </p>
-              <button onClick={() => router.push('/settings')} className="w-full py-4 bg-white dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold rounded-2xl hover:bg-emerald-50 dark:hover:bg-emerald-500/30 transition-all shadow-lg dark:shadow-none border border-transparent dark:border-emerald-500/30">
-                System Settings
-              </button>
+              <h3 className="text-sm font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                <Zap className="w-4 h-4 text-yellow-400" />
+                System Health
+              </h3>
+              
+              <div className="space-y-5 mb-8">
+                {[
+                  { label: 'CPU Usage', val: 24, icon: Cpu, color: 'bg-emerald-500' },
+                  { label: 'Storage', val: 68, icon: HardDrive, color: 'bg-blue-500' },
+                ].map(item => (
+                  <div key={item.label}>
+                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider mb-2 text-gray-400">
+                      <span className="flex items-center gap-1.5"><item.icon className="w-3 h-3" /> {item.label}</span>
+                      <span>{item.val}%</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                      <div className={`h-full ${item.color} rounded-full`} style={{ width: `${item.val}%` }}></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <button className="flex items-center justify-center gap-2 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all">
+                  <RefreshCw className="w-3 h-3" /> Restart AI
+                </button>
+                <button onClick={() => router.push('/settings')} className="flex items-center justify-center gap-2 py-3 bg-emerald-500 hover:bg-emerald-600 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all">
+                  Config
+                </button>
+              </div>
             </div>
-            <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 dark:bg-emerald-500/10 rounded-full blur-2xl"></div>
+            <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-2xl"></div>
           </div>
         </div>
       </div>
@@ -285,8 +318,9 @@ export default function Dashboard() {
           </div>
         </div>
         
-        <div className="overflow-y-auto max-h-[500px] custom-scrollbar">
-          <table className="w-full text-left">
+        <div className="overflow-x-auto custom-scrollbar">
+          <div className="min-w-[800px]">
+            <table className="w-full text-left">
             <thead className="sticky top-0 bg-gray-50/90 dark:bg-slate-800/90 backdrop-blur-md z-20">
               <tr className="text-[10px] uppercase tracking-widest font-black text-gray-400 dark:text-gray-500">
                 <th className="px-8 py-5">Camera Name</th>
@@ -332,6 +366,7 @@ export default function Dashboard() {
               ))}
             </tbody>
           </table>
+          </div>
           {paginatedCameras.length === 0 && (
             <div className="py-20 text-center">
               <Search className="w-12 h-12 text-gray-200 dark:text-slate-800 mx-auto mb-4" />
@@ -345,33 +380,11 @@ export default function Dashboard() {
           <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
             Showing <span className="text-gray-900 dark:text-white">{paginatedCameras.length}</span> of <span className="text-gray-900 dark:text-white">{filteredCameras.length}</span> Devices
           </p>
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="p-3 border border-gray-200 dark:border-slate-700 rounded-2xl hover:bg-white dark:hover:bg-slate-800 disabled:opacity-30 transition-all shadow-sm"
-            >
-              <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            </button>
-            <div className="flex items-center gap-2 px-2">
-              {[...Array(totalPages)].map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`w-10 h-10 rounded-2xl text-xs font-black transition-all ${currentPage === i + 1 ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'text-gray-400 hover:text-emerald-500'}`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
-            <button 
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="p-3 border border-gray-200 dark:border-slate-700 rounded-2xl hover:bg-white dark:hover:bg-slate-800 disabled:opacity-30 transition-all shadow-sm"
-            >
-              <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            </button>
-          </div>
+          <CompactPagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </div>
       </div>
     </div>

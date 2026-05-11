@@ -191,10 +191,10 @@ export default function LiveStream() {
             </div>
           </header>
 
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
             {/* Left Column: Video */}
-            <div className="xl:col-span-9">
+            <div className="lg:col-span-8 xl:col-span-9">
               <div className="bg-white dark:bg-slate-900 rounded-[32px] overflow-hidden border border-gray-100 dark:border-slate-800 shadow-sm transition-colors group">
                 <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -235,7 +235,7 @@ export default function LiveStream() {
             </div>
 
             {/* Right Column: Density & Classification */}
-            <div className="xl:col-span-3 space-y-4">
+            <div className="lg:col-span-4 xl:col-span-3 space-y-4">
               <div className={`p-6 rounded-[28px] shadow-lg flex items-center gap-4 transition-all duration-500 ${densityConfig.cls}`}>
                 <div className="p-3 bg-white/20 rounded-xl">
                   <densityConfig.icon className="w-6 h-6" />

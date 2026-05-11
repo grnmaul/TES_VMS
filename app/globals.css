@@ -1,5 +1,12 @@
 @import "tailwindcss";
-@custom-variant dark (&:where(.dark, .dark *));
+
+@custom-variant dark (&:is(.dark, .dark *));
+
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  height: 100%;
+}
 
 @keyframes fadeIn {
   from {

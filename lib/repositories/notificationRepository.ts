@@ -7,30 +7,38 @@ export interface NotificationRecord {
   title: string;
   message: string;
   type: NotificationType;
+  target_role: string;
   timestamp: string;
   is_read: number;
 }
 
 export class NotificationRepository {
-  listAll(limit?: number, offset?: number): NotificationRecord[] {
+  listAll(limit?: number, offset?: number, role?: string): NotificationRecord[] {
     const db = getDatabase();
     
+    let query = 'SELECT * FROM notifications';
+    const params: any[] = [];
+
+    if (role) {
+      query += ' WHERE target_role = ? OR target_role = \'all\'';
+      params.push(role);
+    }
+
+    query += ' ORDER BY timestamp DESC';
+
     if (limit !== undefined && offset !== undefined) {
-      return db
-        .prepare('SELECT * FROM notifications ORDER BY timestamp DESC LIMIT ? OFFSET ?')
-        .all(limit, offset) as NotificationRecord[];
+      query += ' LIMIT ? OFFSET ?';
+      params.push(limit, offset);
     }
     
-    return db
-      .prepare('SELECT * FROM notifications ORDER BY timestamp DESC')
-      .all() as NotificationRecord[];
+    return db.prepare(query).all(...params) as NotificationRecord[];
   }
 
-  create(title: string, message: string, type: NotificationType): NotificationRecord {
+  create(title: string, message: string, type: NotificationType, targetRole: string = 'all'): NotificationRecord {
     const db = getDatabase();
     const result = db
-      .prepare('INSERT INTO notifications (title, message, type) VALUES (?, ?, ?)')
-      .run(title, message, type);
+      .prepare('INSERT INTO notifications (title, message, type, target_role) VALUES (?, ?, ?, ?)')
+      .run(title, message, type, targetRole);
 
     return db
       .prepare('SELECT * FROM notifications WHERE id = ?')

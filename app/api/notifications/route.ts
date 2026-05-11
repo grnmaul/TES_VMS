@@ -7,6 +7,8 @@ import { wsHub } from '@/lib/realtime/wsHub';
 
 export const dynamic = 'force-dynamic';
 
+import { getAuthUser } from '@/lib/auth/utils';
+
 export const GET = withErrorHandler(async (req: NextRequest) => {
   ensureRuntimeBootstrapped();
   const searchParams = req.nextUrl.searchParams;
@@ -16,18 +18,20 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
   const limit = limitParam ? parseInt(limitParam, 10) : undefined;
   const offset = offsetParam ? parseInt(offsetParam, 10) : undefined;
 
-  const notifications = notificationService.listNotifications(limit, offset);
+  const user = getAuthUser(req);
+  const notifications = notificationService.listNotifications(limit, offset, user?.role);
   return ok(notifications);
 });
 
 export const POST = withErrorHandler(async (req: NextRequest) => {
   ensureRuntimeBootstrapped();
-  const { title, message, type } = await parseJson<{
+  const { title, message, type, target_role } = await parseJson<{
     title: unknown;
     message: unknown;
     type: unknown;
+    target_role?: string;
   }>(req);
-  const newNotification = notificationService.createNotification(title, message, type);
+  const newNotification = notificationService.createNotification(title, message, type, target_role || 'all');
   wsHub.broadcast({ type: 'notification:new', payload: newNotification });
   return ok(newNotification);
 });

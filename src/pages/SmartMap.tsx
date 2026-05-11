@@ -240,7 +240,7 @@ export default function SmartMap() {
   };
 
   return (
-    <div className="p-4 md:p-8 h-screen flex flex-col bg-gradient-to-br from-gray-50 to-white dark:from-slate-900 dark:to-slate-800 transition-colors">
+    <div className="p-4 md:p-8 min-h-screen lg:h-screen flex flex-col bg-gradient-to-br from-gray-50 to-white dark:from-slate-900 dark:to-slate-800 transition-colors">
       {/* Header */}
       <header className="mb-6">
         <div className="flex items-center justify-between flex-wrap gap-4">

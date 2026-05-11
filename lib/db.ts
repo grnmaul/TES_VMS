@@ -88,6 +88,10 @@ export function getDatabase() {
       db.exec("ALTER TABLE system_settings ADD COLUMN alert_sensitivity TEXT DEFAULT 'Medium'");
     }
 
+    if (!hasColumn(db, 'notifications', 'target_role')) {
+      db.exec("ALTER TABLE notifications ADD COLUMN target_role TEXT DEFAULT 'all'");
+    }
+
     // Seed initial admin if not exists
     const adminExists = db
       .prepare('SELECT * FROM users WHERE username = ?')
