@@ -2,12 +2,14 @@ import { wsHub } from '@/lib/realtime/wsHub';
 import { cameraHealthService } from '@/lib/health/cameraHealthService';
 import { go2rtcService } from '@/lib/stream/go2rtcService';
 import { getDatabase } from '@/lib/db';
+import { storagePurgeService } from '@/lib/services/storagePurgeService';
 
 export function ensureRuntimeBootstrapped() {
   if (!(globalThis as any).__bootstrapped) {
     (globalThis as any).__bootstrapped = true;
     wsHub.ensureStarted();
     cameraHealthService.start();
+    storagePurgeService.start();
   }
   
   // Always ensure server is up and cameras are synced

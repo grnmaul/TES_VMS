@@ -131,8 +131,6 @@ streams:
     - rtsp://streaming:Streaming2025@10.10.122.219:554/Streaming/Channels/102
   camera-80:
     - rtsp://streaming:Streaming2025@10.10.122.157:554/Streaming/Channels/102
-  camera-81:
-    - rtsp://streaming:Streaming2025@10.10.122.238:554/Streaming/Channels/102
   camera-82:
     - rtsp://streaming:Streaming2025@10.10.123.60:554/Streaming/Channels/102
   camera-83:

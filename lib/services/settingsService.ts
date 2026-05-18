@@ -18,6 +18,13 @@ function asBooleanNumber(value: unknown, field: string): number {
   return value ? 1 : 0;
 }
 
+function asNumber(value: unknown, field: string): number {
+  if (typeof value !== 'number') {
+    throw new AppError(`${field} must be a number`, 400);
+  }
+  return value;
+}
+
 export class SettingsService {
   constructor(private readonly settingsRepository: SettingsRepository) {}
 
@@ -39,6 +46,10 @@ export class SettingsService {
       email_alerts: asBooleanNumber(input.email_alerts, 'Email alerts'),
       push_notifications: asBooleanNumber(input.push_notifications, 'Push notifications'),
       alert_sensitivity: asString(input.alert_sensitivity, 'Alert sensitivity'),
+      storage_quota: asString(input.storage_quota, 'Storage quota'),
+      retention_days: asNumber(input.retention_days, 'Retention days'),
+      auto_purge: asBooleanNumber(input.auto_purge, 'Auto purge'),
+      recording_mode: asString(input.recording_mode, 'Recording mode'),
     });
   }
 }

@@ -2,6 +2,7 @@ import net from 'net';
 import { CameraRepository, CameraStatus } from '@/lib/repositories/cameraRepository';
 import { wsHub } from '@/lib/realtime/wsHub';
 import { go2rtcService } from '@/lib/stream/go2rtcService';
+import { notificationService } from '@/lib/services/notificationService';
 
 const HEALTH_INTERVAL_MS = 15000;
 const HEALTH_TIMEOUT_MS = 2500;
@@ -56,6 +57,23 @@ class CameraHealthService {
             // stream reconnection logic. Aggressively removing/adding streams
             // causes the cameras to suddenly die or glitch.
             wsHub.broadcast({ type: 'camera:health', payload: updated });
+
+            // Create persistent notification for all users
+            if (realStatus === 'offline') {
+              notificationService.createNotification(
+                'Kamera Offline',
+                `Kamera ${camera.name} terputus dari jaringan atau mengalami gangguan koneksi.`,
+                'error',
+                'all'
+              );
+            } else if (realStatus === 'online') {
+              notificationService.createNotification(
+                'Kamera Online',
+                `Kamera ${camera.name} telah kembali beroperasi normal.`,
+                'success',
+                'all'
+              );
+            }
           }
         }
       })

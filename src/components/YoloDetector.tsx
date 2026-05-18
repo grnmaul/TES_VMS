@@ -50,76 +50,211 @@ const BOX_GOL: Record<string, string> = {
 function bcolor(cls: string) { return BOX_COLOR[cls] ?? BOX_COLOR._default; }
 function bgol(cls: string) { return BOX_GOL[cls] ?? '?'; }
 
-// ─── Simple Centroid Tracker ──────────────────────────────────────────────────
-class CentroidTracker {
+// ─── MaxTracker (Alpha-Beta Filter + Multi-Stage Matching) ───────────────────
+// Menggunakan algoritma setara SORT (Simple Online and Realtime Tracking) 
+// dengan Alpha-Beta filter untuk state estimation yang super mulus.
+interface Track {
+  id: number;
+  class: string;
+  lastSeen: number;
+  lastUpdated: number; // Kapan koordinat x, y terakhir diperbarui (bisa dari deteksi atau prediksi)
+  lostFrames: number;
+  
+  // State Alpha-Beta Filter
+  x: number; y: number; w: number; h: number;
+  vx: number; vy: number; vw: number; vh: number;
+  
+  lastDetCentroid?: { cx: number, cy: number }; // Koordinat deteksi riil terakhir untuk menghitung kecepatan stabil
+  bbox: [number, number, number, number];
+  speed: number;
+}
+
+class MaxTracker {
   nextId = 1;
-  tracks = new Map<number, { bbox: number[], class: string, lastSeen: number, speed: number }>();
+  tracks: Track[] = [];
+  maxLostFrames = 15; // Lebih tahan terhadap oklusi
+  
+  // Konstanta Alpha-Beta Filter
+  alpha = 0.85; // Bobot kepercayaan pada deteksi baru (0.85 = responsif & lincah)
+  beta = 0.01;  // Adaptasi kecepatan perubahan posisi
 
   update(detections: DetectedObject[], now: number) {
-    const updatedTracks = new Map();
+    if (this.tracks.length === 0) {
+      for (const det of detections) {
+        this.tracks.push(this.createTrack(det, now));
+      }
+      return;
+    }
+
+    // 1. Prediksi posisi semua track ke waktu 'now' (Alpha-Beta Predict Step)
+    for (const t of this.tracks) {
+      const dt = now - t.lastUpdated;
+      if (dt > 0 && dt < 2000) {
+        t.x += t.vx * dt;
+        t.y += t.vy * dt;
+        t.w += t.vw * dt;
+        t.h += t.vh * dt;
+      }
+      t.lastUpdated = now; // Update timestamp prediksi agar tidak menumpuk berlipat ganda
+    }
+
+    const matchedTracks = new Set<number>();
+    const matchedDetections = new Set<number>();
+
+    // 2. Tahap 1: Pencocokan sangat akurat menggunakan IoU (Intersection over Union)
+    let pairsIoU: {t: number, d: number, iou: number}[] = [];
+    for (let i = 0; i < this.tracks.length; i++) {
+      for (let j = 0; j < detections.length; j++) {
+        if (this.tracks[i].class !== detections[j].class) continue;
+        const trackBbox = [this.tracks[i].x, this.tracks[i].y, this.tracks[i].w, this.tracks[i].h] as [number,number,number,number];
+        const iou = this.getIoU(trackBbox, detections[j].bbox);
+        if (iou > 0.1) {
+          pairsIoU.push({t: i, d: j, iou});
+        }
+      }
+    }
+    pairsIoU.sort((a, b) => b.iou - a.iou); // Prioritaskan IoU tertinggi
+
+    for (const p of pairsIoU) {
+      if (!matchedTracks.has(p.t) && !matchedDetections.has(p.d)) {
+        matchedTracks.add(p.t);
+        matchedDetections.add(p.d);
+        this.updateTrack(this.tracks[p.t], detections[p.d], now);
+      }
+    }
+
+    // 3. Tahap 2: Pencocokan sisa menggunakan Jarak Euclidean (Distance)
+    let pairsDist: {t: number, d: number, dist: number}[] = [];
+    for (let i = 0; i < this.tracks.length; i++) {
+      if (matchedTracks.has(i)) continue;
+      for (let j = 0; j < detections.length; j++) {
+        if (matchedDetections.has(j)) continue;
+        if (this.tracks[i].class !== detections[j].class) continue;
+        
+        const cxT = this.tracks[i].x + this.tracks[i].w/2;
+        const cyT = this.tracks[i].y + this.tracks[i].h/2;
+        const cxD = detections[j].bbox[0] + detections[j].bbox[2]/2;
+        const cyD = detections[j].bbox[1] + detections[j].bbox[3]/2;
+        
+        const dist = Math.hypot(cxT - cxD, cyT - cyD);
+        const maxDist = Math.max(detections[j].bbox[2], detections[j].bbox[3], 250);
+        
+        if (dist < maxDist) {
+          pairsDist.push({t: i, d: j, dist});
+        }
+      }
+    }
+    pairsDist.sort((a, b) => a.dist - b.dist); // Prioritaskan jarak terdekat
+
+    for (const p of pairsDist) {
+      if (!matchedTracks.has(p.t) && !matchedDetections.has(p.d)) {
+        matchedTracks.add(p.t);
+        matchedDetections.add(p.d);
+        this.updateTrack(this.tracks[p.t], detections[p.d], now);
+      }
+    }
+
+    // 4. Buat track baru untuk deteksi yang tidak cocok
+    for (let j = 0; j < detections.length; j++) {
+      if (!matchedDetections.has(j)) {
+        this.tracks.push(this.createTrack(detections[j], now));
+      }
+    }
+
+    // 5. Update track yang tidak cocok (hilang/oklusi)
+    for (let i = 0; i < this.tracks.length; i++) {
+      if (!matchedTracks.has(i)) {
+        this.tracks[i].lostFrames++;
+        this.tracks[i].speed *= 0.95; // Perlahan kurangi kecepatan
+        this.tracks[i].vx *= 0.90;    // Redam momentum agar tidak meluncur liar keluar layar
+        this.tracks[i].vy *= 0.90;
+        this.tracks[i].vw *= 0.90;
+        this.tracks[i].vh *= 0.90;
+        this.tracks[i].bbox = [this.tracks[i].x, this.tracks[i].y, this.tracks[i].w, this.tracks[i].h];
+      }
+    }
+
+    // 6. Bersihkan track lama
+    this.tracks = this.tracks.filter(t => t.lostFrames <= this.maxLostFrames && (now - t.lastSeen < 3000));
+  }
+
+  createTrack(det: DetectedObject, now: number): Track {
+    const [x, y, w, h] = det.bbox;
+    const speed = det.class === 'motorcycle' || det.class === 'car' ? 25 + Math.random()*10 : 15 + Math.random()*10;
+    det.trackId = this.nextId;
+    det.speed = speed;
+    return {
+      id: this.nextId++,
+      class: det.class,
+      lastSeen: now,
+      lastUpdated: now,
+      lostFrames: 0,
+      x, y, w, h,
+      vx: 0, vy: 0, vw: 0, vh: 0,
+      lastDetCentroid: { cx: x + w/2, cy: y + h/2 },
+      bbox: det.bbox,
+      speed
+    };
+  }
+
+  updateTrack(t: Track, det: DetectedObject, now: number) {
+    const dt = now - t.lastSeen;
+    const [nx, ny, nw, nh] = det.bbox;
+    const ncx = nx + nw/2;
+    const ncy = ny + nh/2;
+
+    if (dt > 0) {
+      // Hitung residual (selisih posisi deteksi riil vs prediksi filter saat ini)
+      const rx = nx - t.x;
+      const ry = ny - t.y;
+      const rw = nw - t.w;
+      const rh = nh - t.h;
+
+      // Koreksi state filter menggunakan residual (Alpha-Beta Correction)
+      t.x += this.alpha * rx;
+      t.y += this.alpha * ry;
+      t.w += this.alpha * rw;
+      t.h += this.alpha * rh;
+
+      // Koreksi momentum kecepatan (px/ms)
+      t.vx += this.beta * (rx / dt);
+      t.vy += this.beta * (ry / dt);
+      t.vw += this.beta * (rw / dt);
+      t.vh += this.beta * (rh / dt);
+
+      // Hitung visual speed stabil berdasarkan pergeseran deteksi riil terakhir
+      if (t.lastDetCentroid) {
+        const dist = Math.hypot(ncx - t.lastDetCentroid.cx, ncy - t.lastDetCentroid.cy);
+        const rawSpeed = (dist / dt) * 60; // px/ms ke km/h (kasar)
+        t.speed = t.speed * 0.75 + rawSpeed * 0.25; // EMA smoothing
+      }
+    } else {
+      t.x = nx; t.y = ny; t.w = nw; t.h = nh;
+    }
+
+    t.lastSeen = now;
+    t.lastUpdated = now;
+    t.lostFrames = 0;
+    t.lastDetCentroid = { cx: ncx, cy: ncy };
     
-    for (const det of detections) {
-      const [x, y, w, h] = det.bbox;
-      const cx = x + w / 2;
-      const cy = y + h / 2;
+    // Terapkan hasil filter ke bounding box agar rendering UI sangat halus (bebas jitter)
+    t.bbox = [t.x, t.y, t.w, t.h]; 
 
-      let bestId = -1;
-      let minDistance = Math.max(w, h, 100); // threshold dinamis berdasarkan ukuran objek
+    det.trackId = t.id;
+    det.speed = t.speed;
+    det.bbox = t.bbox; 
+  }
 
-      for (const [id, track] of this.tracks.entries()) {
-        if (det.class !== track.class) continue;
-        
-        const [tx, ty, tw, th] = track.bbox;
-        const tcx = tx + tw / 2;
-        const tcy = ty + th / 2;
-        const dist = Math.hypot(cx - tcx, cy - tcy);
-        
-        if (dist < minDistance) {
-          bestId = id;
-          minDistance = dist;
-        }
-      }
-
-      let speed = 0;
-      if (bestId !== -1) {
-        const track = this.tracks.get(bestId)!;
-        const [tx, ty, tw, th] = track.bbox;
-        const tcx = tx + tw / 2;
-        const tcy = ty + th / 2;
-        const dist = Math.hypot(cx - tcx, cy - tcy);
-        const dt = now - track.lastSeen;
-        
-        if (dt > 0) {
-          // Simulasi estimasi kecepatan (pixel/ms ke kpj) 
-          // Di sistem APACE nyata ini perlu kalibrasi perspektif kamera
-          const rawSpeed = (dist / dt) * 60; 
-          speed = track.speed === 0 ? rawSpeed : track.speed * 0.8 + rawSpeed * 0.2; // Smoothing
-        } else {
-          speed = track.speed;
-        }
-        
-        updatedTracks.set(bestId, { bbox: det.bbox, class: det.class, lastSeen: now, speed });
-        this.tracks.delete(bestId); // Hapus agar tidak di-match lagi
-      } else {
-        bestId = this.nextId++;
-        // Kecepatan awal (base speed)
-        const baseSpeed = det.class === 'motorcycle' || det.class === 'car' ? 25 : 15;
-        speed = baseSpeed + Math.random() * 10;
-        updatedTracks.set(bestId, { bbox: det.bbox, class: det.class, lastSeen: now, speed });
-      }
-      
-      det.trackId = bestId;
-      det.speed = updatedTracks.get(bestId)!.speed;
-    }
-
-    // Simpan objek yang tak terdeteksi sementara (occlusion handling)
-    for (const [id, track] of this.tracks.entries()) {
-      if (now - track.lastSeen < 1000) {
-        updatedTracks.set(id, { ...track, speed: track.speed * 0.95 }); // kecepatan melambat perlahan
-      }
-    }
-
-    this.tracks = updatedTracks;
+  getIoU(box1: [number, number, number, number], box2: [number, number, number, number]) {
+    const [x1, y1, w1, h1] = box1;
+    const [x2, y2, w2, h2] = box2;
+    const xA = Math.max(x1, x2);
+    const yA = Math.max(y1, y2);
+    const xB = Math.min(x1 + w1, x2 + w2);
+    const yB = Math.min(y1 + h1, y2 + h2);
+    const interArea = Math.max(0, xB - xA) * Math.max(0, yB - yA);
+    if (interArea === 0) return 0;
+    return interArea / (w1 * h1 + w2 * h2 - interArea);
   }
 }
 
@@ -150,7 +285,7 @@ export default function YoloDetector({ cameraId, aiEnabled = false, onDetection,
   const lastTsRef = useRef(0);
   const mountRef  = useRef(true);
   const lastSaveRef = useRef(0);
-  const trackerRef = useRef(new CentroidTracker());
+  const trackerRef = useRef(new MaxTracker());
   const containerRef = useRef<HTMLDivElement>(null);
 
   const toggleFullscreen = () => {

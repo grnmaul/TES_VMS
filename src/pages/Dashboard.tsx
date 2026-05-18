@@ -253,42 +253,7 @@ export default function Dashboard() {
             </button>
           </div>
 
-          {/* System Health & Quick Actions */}
-          <div className="bg-slate-900 p-8 rounded-[40px] border border-slate-800 text-white shadow-xl relative overflow-hidden">
-            <div className="relative z-10">
-              <h3 className="text-sm font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-                <Zap className="w-4 h-4 text-yellow-400" />
-                System Health
-              </h3>
-              
-              <div className="space-y-5 mb-8">
-                {[
-                  { label: 'CPU Usage', val: 24, icon: Cpu, color: 'bg-emerald-500' },
-                  { label: 'Storage', val: 68, icon: HardDrive, color: 'bg-blue-500' },
-                ].map(item => (
-                  <div key={item.label}>
-                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider mb-2 text-gray-400">
-                      <span className="flex items-center gap-1.5"><item.icon className="w-3 h-3" /> {item.label}</span>
-                      <span>{item.val}%</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                      <div className={`h-full ${item.color} rounded-full`} style={{ width: `${item.val}%` }}></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <button className="flex items-center justify-center gap-2 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all">
-                  <RefreshCw className="w-3 h-3" /> Restart AI
-                </button>
-                <button onClick={() => router.push('/settings')} className="flex items-center justify-center gap-2 py-3 bg-emerald-500 hover:bg-emerald-600 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all">
-                  Config
-                </button>
-              </div>
-            </div>
-            <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-2xl"></div>
-          </div>
         </div>
       </div>
 

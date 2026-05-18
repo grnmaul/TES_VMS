@@ -64,7 +64,6 @@ export default function Sidebar() {
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', roles: ['admin', 'user'] },
-    { icon: Map, label: 'AI Smart Map', path: '/smart-map', roles: ['user'] },
     { icon: Camera, label: 'Cameras', path: '/cameras', roles: ['admin'] },
     { icon: Bell, label: 'Notifications', path: '/notifications', roles: ['admin', 'user'] },
     { icon: Settings, label: 'Settings', path: '/settings', roles: ['admin'] },

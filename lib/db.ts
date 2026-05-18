@@ -57,6 +57,19 @@ export function getDatabase() {
         is_read INTEGER DEFAULT 0
       );
 
+      CREATE TABLE IF NOT EXISTS reports (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        user_name TEXT,
+        camera_id INTEGER,
+        camera_name TEXT,
+        category TEXT,
+        description TEXT,
+        urgency TEXT DEFAULT 'normal',
+        status TEXT DEFAULT 'new',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+
       CREATE TABLE IF NOT EXISTS system_settings (
         id INTEGER PRIMARY KEY CHECK (id = 1),
         system_language TEXT DEFAULT 'Bahasa Indonesia',
@@ -70,7 +83,11 @@ export function getDatabase() {
         port TEXT DEFAULT '8080',
         email_alerts INTEGER DEFAULT 0,
         push_notifications INTEGER DEFAULT 1,
-        alert_sensitivity TEXT DEFAULT 'Medium'
+        alert_sensitivity TEXT DEFAULT 'Medium',
+        storage_quota TEXT DEFAULT '500GB',
+        retention_days INTEGER DEFAULT 30,
+        auto_purge INTEGER DEFAULT 1,
+        recording_mode TEXT DEFAULT 'Motion Only'
       );
     `);
 
@@ -86,6 +103,13 @@ export function getDatabase() {
       db.exec('ALTER TABLE system_settings ADD COLUMN email_alerts INTEGER DEFAULT 0');
       db.exec('ALTER TABLE system_settings ADD COLUMN push_notifications INTEGER DEFAULT 1');
       db.exec("ALTER TABLE system_settings ADD COLUMN alert_sensitivity TEXT DEFAULT 'Medium'");
+    }
+
+    if (!hasColumn(db, 'system_settings', 'storage_quota')) {
+      db.exec("ALTER TABLE system_settings ADD COLUMN storage_quota TEXT DEFAULT '500GB'");
+      db.exec('ALTER TABLE system_settings ADD COLUMN retention_days INTEGER DEFAULT 30');
+      db.exec('ALTER TABLE system_settings ADD COLUMN auto_purge INTEGER DEFAULT 1');
+      db.exec("ALTER TABLE system_settings ADD COLUMN recording_mode TEXT DEFAULT 'Motion Only'");
     }
 
     if (!hasColumn(db, 'notifications', 'target_role')) {

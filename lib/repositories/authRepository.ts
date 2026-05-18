@@ -16,6 +16,13 @@ export class AuthRepository {
       .get(username) as UserRecord | undefined;
   }
 
+  findById(id: number): UserRecord | undefined {
+    const db = getDatabase();
+    return db
+      .prepare('SELECT id, username, password, role, full_name FROM users WHERE id = ?')
+      .get(id) as UserRecord | undefined;
+  }
+
   createUser(username: string, hashedPassword: string, fullName: string): number {
     const db = getDatabase();
     const result = db
@@ -23,5 +30,14 @@ export class AuthRepository {
       .run(username, hashedPassword, fullName);
 
     return Number(result.lastInsertRowid);
+  }
+
+  updatePassword(userId: number, hashedPassword: string): boolean {
+    const db = getDatabase();
+    const result = db
+      .prepare('UPDATE users SET password = ? WHERE id = ?')
+      .run(hashedPassword, userId);
+
+    return result.changes > 0;
   }
 }

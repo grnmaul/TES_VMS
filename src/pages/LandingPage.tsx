@@ -76,17 +76,17 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-900 font-sans text-gray-900 dark:text-gray-100 transition-colors duration-300">
-      {/* Scroll Progress Bar */}
+      {/* Scroll Progress Bar — sits just below the navbar */}
       <motion.div
-        className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-400 origin-left z-[60]"
+        className="fixed top-[80px] left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400 origin-left z-40"
         style={{ scaleX }}
       />
 
       {/* Navbar */}
-      <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 border-b ${
+      <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 bg-white dark:bg-slate-900 border-b ${
         isScrolled 
-          ? 'bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-gray-200 dark:border-slate-800 shadow-sm' 
-          : 'bg-transparent border-transparent'
+          ? 'border-gray-200 dark:border-slate-800 shadow-md' 
+          : 'border-transparent shadow-none'
       }`}>
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -241,7 +241,7 @@ export default function LandingPage() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
             <div>
               <h2 className="text-2xl md:text-3xl font-bold mb-4 dark:text-white">Live Streaming CCTV</h2>
-              <p className="text-sm md:text-gray-500 dark:text-gray-400">Pantau kondisi lalu lintas dan fasilitas publik secara real-time</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Pantau kondisi lalu lintas dan fasilitas publik secara real-time</p>
             </div>
             <Link href="/login" className="w-full md:w-auto px-6 py-3 bg-emerald-500 text-white font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/20 hover:-translate-y-0.5">
               Lihat Semua CCTV <ArrowRight className="w-4 h-4" />

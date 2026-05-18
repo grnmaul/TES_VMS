@@ -87,7 +87,7 @@ export default function NotificationCenter() {
     if (res.ok) {
       setNotifications((prev) => prev.map((notif) => ({ ...notif, is_read: 1 })));
       resetUnreadCount();
-      toast.success('Semua dibaca');
+      toast.success('All read');
     }
   };
 
@@ -99,7 +99,7 @@ export default function NotificationCenter() {
     if (res.ok) {
       setNotifications([]);
       resetUnreadCount();
-      toast.success('Dihapus semua');
+      toast.success('All cleared');
     }
   };
 
@@ -113,7 +113,7 @@ export default function NotificationCenter() {
       const notif = notifications.find(n => n.id === id);
       setNotifications(prev => prev.filter(n => n.id !== id));
       if (notif && notif.is_read === 0) decrementUnreadCount();
-      toast.success('Notifikasi dihapus');
+      toast.success('Notification deleted');
     }
   };
 
@@ -160,15 +160,15 @@ export default function NotificationCenter() {
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">Notification Center</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            {isAdmin ? 'Monitoring integritas sistem & log aktivitas' : 'Monitor aktivitas pemantauan area Anda'}
+            {isAdmin ? 'Monitoring system integrity & activity log' : 'Monitor your area surveillance activity'}
           </p>
         </div>
         <div className="flex gap-3 w-full md:w-auto">
           <button onClick={handleMarkAllAsRead} className="px-4 py-2 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 flex items-center gap-2 transition-all shadow-sm">
-            <CheckSquare className="w-4 h-4" /> Tandai Semua Dibaca
+            <CheckSquare className="w-4 h-4" /> Mark All as Read
           </button>
           <button onClick={handleClearAll} className="px-4 py-2 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 flex items-center gap-2 transition-all shadow-sm">
-            <Trash2 className="w-4 h-4" /> Bersihkan
+            <Trash2 className="w-4 h-4" /> Clear All
           </button>
         </div>
       </header>
@@ -197,7 +197,7 @@ export default function NotificationCenter() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input 
                 type="text" 
-                placeholder="Cari notifikasi..." 
+                placeholder="Search notifications..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
@@ -212,9 +212,9 @@ export default function NotificationCenter() {
                 <thead className="bg-gray-50 dark:bg-slate-800/50">
                   <tr>
                     <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
-                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Judul</th>
-                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Pesan</th>
-                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Waktu</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Title</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Message</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Time</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50 dark:divide-slate-800">
@@ -247,7 +247,7 @@ export default function NotificationCenter() {
                 </tbody>
               </table>
               {filteredNotifications.length === 0 && (
-                <div className="py-20 text-center text-gray-400 font-bold uppercase tracking-widest text-xs">Kosong</div>
+                <div className="py-20 text-center text-gray-400 font-bold uppercase tracking-widest text-xs">Empty</div>
               )}
             </div>
           ) : (
@@ -271,21 +271,21 @@ export default function NotificationCenter() {
                     }`}>
                       {notif.title.toLowerCase().includes('motion') ? <Activity className="w-6 h-6" /> : <Info className="w-6 h-6" />}
                     </div>
-                    {!notif.is_read && <span className="px-2 py-1 bg-emerald-500 text-[8px] font-black text-white uppercase rounded-full">Baru</span>}
+                    {!notif.is_read && <span className="px-2 py-1 bg-emerald-500 text-[8px] font-black text-white uppercase rounded-full">New</span>}
                   </div>
                   <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2 leading-tight">{notif.title}</h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">{notif.message}</p>
                   <div className="flex items-center justify-between pt-4 border-t border-gray-50 dark:border-slate-800">
                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{new Date(notif.timestamp).toLocaleDateString()}</span>
                     <button className="flex items-center gap-1.5 text-xs font-black text-emerald-600 dark:text-emerald-400 hover:gap-2 transition-all">
-                      Lihat Detail <ArrowRight className="w-3 h-3" />
+                      View Details <ArrowRight className="w-3 h-3" />
                     </button>
                   </div>
                 </div>
               ))}
               {filteredNotifications.length === 0 && (
                 <div className="col-span-full py-20 text-center bg-white dark:bg-slate-900 rounded-[40px] border border-dashed border-gray-200">
-                   <p className="text-gray-400 font-bold uppercase tracking-[0.2em] text-xs">Semua Terpantau Aman</p>
+                   <p className="text-gray-400 font-bold uppercase tracking-[0.2em] text-xs">All Clear and Secure</p>
                 </div>
               )}
             </div>
@@ -294,7 +294,7 @@ export default function NotificationCenter() {
 
         <div className="space-y-6">
           <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-sm">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Analisis Notifikasi</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Notification Analytics</h2>
             <div className="space-y-6">
               {[
                 { label: 'Unread', val: notifications.filter(n => !n.is_read).length, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },

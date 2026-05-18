@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Settings as SettingsIcon, Camera, Bell, Shield, Globe, Save, RefreshCw, User, Lock, X, CheckCircle2, AlertCircle, Brain, HardDrive, Database, Sliders, Activity } from 'lucide-react';
+import { Settings as SettingsIcon, Camera, Bell, Shield, Globe, Save, RefreshCw, User, Lock, X, CheckCircle2, AlertCircle, HardDrive } from 'lucide-react';
+import { useAuth } from '@/src/context/AuthContext';
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('system');
@@ -7,48 +8,68 @@ export default function Settings() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{show: boolean, message: string, type: 'success'|'error'}>({show: false, message: '', type: 'success'});
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const { token } = useAuth();
   
-  const [form, setForm] = useState({
-    // System
-    system_name: 'VMS Kota Madiun',
+  const FACTORY_DEFAULTS = {
     system_language: 'Bahasa Indonesia',
-    time_zone: '(UTC+07:00) Jakarta',
-    auto_restart: true,
-    
-    // AI & Analytics
-    ai_sensitivity: 'Medium',
-    ai_model: 'YOLOv8-M (Balanced)',
-    detect_vehicles: true,
-    detect_persons: true,
-    detect_parking_violation: false,
-    
-    // Storage
+    time_zone: '(UTC+07:00) Bangkok, Hanoi, Jakarta',
+    date_format: 'DD/MM/YYYY',
+    default_resolution: '1080p (1920 x 1080)',
+    frame_rate: '30 FPS',
+    night_mode: true,
+    motion_detection: true,
+    static_ip: '192.168.1.100',
+    port: '8080',
+    email_alerts: false,
+    push_notifications: true,
+    alert_sensitivity: 'Medium',
     storage_quota: '500GB',
     retention_days: 30,
     auto_purge: true,
     recording_mode: 'Motion Only',
-    
-    // Security
-    static_ip: '192.168.1.100',
-    port: '8080',
-    session_timeout: '60 min',
-    two_factor: false
-  });
+  };
+
+  const [form, setForm] = useState(FACTORY_DEFAULTS);
   
   const [initialForm, setInitialForm] = useState(form);
 
   const tabs = [
-    { id: 'system', label: 'System Configuration', icon: Globe, desc: 'Global server & localization' },
-    { id: 'ai', label: 'AI & Analytics', icon: Brain, desc: 'Object detection & sensitivity' },
+    { id: 'system', label: 'System & Display', icon: Globe, desc: 'Global localization & formats' },
     { id: 'storage', label: 'Storage & Purge', icon: HardDrive, desc: 'Data retention & quota' },
-    { id: 'security', label: 'Access & Network', icon: Shield, desc: 'Security & connectivity' },
+    { id: 'alerts', label: 'Notifications & Alerts', icon: Bell, desc: 'Push & email notifications' },
+    { id: 'network', label: 'Access & Network', icon: Shield, desc: 'Network connectivity & IP' },
   ];
 
   useEffect(() => {
-    // Simulated load
-    setTimeout(() => {
-      setLoading(false);
-    }, 500);
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch('/api/settings');
+        if (!res.ok) throw new Error('Failed to load settings');
+        const data = await res.json();
+        
+        const serverData = data;
+        const loadedForm = {
+          ...serverData,
+          night_mode: serverData.night_mode === 1,
+          motion_detection: serverData.motion_detection === 1,
+          email_alerts: serverData.email_alerts === 1,
+          push_notifications: serverData.push_notifications === 1,
+          auto_purge: serverData.auto_purge === 1,
+        };
+        
+        setForm(loadedForm);
+        setInitialForm(loadedForm);
+      } catch (error) {
+        showToast('Gagal memuat konfigurasi dari server', 'error');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchSettings();
   }, []);
 
   const showToast = (message: string, type: 'success' | 'error') => {
@@ -58,12 +79,76 @@ export default function Settings() {
 
   const saveSettings = async () => {
     setSaving(true);
-    // Simulated save
-    setTimeout(() => {
-      setInitialForm(form);
+    try {
+      // Map react boolean state back to numeric 1 or 0 for backend (although the backend asBooleanNumber function also accepts boolean directly)
+      const payload = {
+        ...form,
+        night_mode: form.night_mode,
+        motion_detection: form.motion_detection,
+        email_alerts: form.email_alerts,
+        push_notifications: form.push_notifications,
+        auto_purge: form.auto_purge,
+      };
+      
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error('Failed to save settings');
+      
+      const data = await res.json();
+      const serverData = data;
+      const updatedForm = {
+        ...serverData,
+        night_mode: serverData.night_mode === 1,
+        motion_detection: serverData.motion_detection === 1,
+        email_alerts: serverData.email_alerts === 1,
+        push_notifications: serverData.push_notifications === 1,
+        auto_purge: serverData.auto_purge === 1,
+      };
+      
+      setForm(updatedForm);
+      setInitialForm(updatedForm);
       showToast('Konfigurasi sistem berhasil diperbarui', 'success');
+    } catch (error) {
+      showToast('Gagal menyimpan konfigurasi', 'error');
+    } finally {
       setSaving(false);
-    }, 800);
+    }
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+    
+    setPasswordLoading(true);
+    try {
+      const res = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ oldPassword, newPassword })
+      });
+      
+      const data = await res.json();
+      
+      if (res.ok) {
+        setIsPasswordModalOpen(false);
+        showToast('Password successfully updated', 'success');
+        setOldPassword('');
+        setNewPassword('');
+      } else {
+        showToast(data.error || 'Failed to update password', 'error');
+      }
+    } catch (error) {
+      showToast('An error occurred', 'error');
+    } finally {
+      setPasswordLoading(false);
+    }
   };
 
   const ToggleSwitch = ({ checked, onChange, label, sublabel }: { checked: boolean, onChange: (val: boolean) => void, label: string, sublabel?: string }) => (
@@ -93,7 +178,10 @@ export default function Settings() {
         </div>
         <div className="flex gap-3 w-full md:w-auto">
           <button 
-            onClick={() => setForm(initialForm)}
+            onClick={() => {
+              setForm(FACTORY_DEFAULTS);
+              showToast('Dikembalikan ke setelan pabrik. Klik Save untuk menyimpan.', 'success');
+            }}
             className="flex-1 md:flex-none px-6 py-3 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 text-gray-600 dark:text-gray-400 text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-all"
           >
             Reset
@@ -132,12 +220,6 @@ export default function Settings() {
               </div>
             </button>
           ))}
-          
-          <div className="mt-8 p-6 bg-slate-900 rounded-[32px] border border-slate-800 relative overflow-hidden hidden lg:block">
-            <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em] mb-2">Engine Status</p>
-            <p className="text-xs text-gray-400 leading-relaxed font-medium">All AI models are running optimally. Last calibration: Today, 08:00 AM</p>
-            <div className="absolute -bottom-10 -right-10 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl"></div>
-          </div>
         </div>
 
         {/* Content Area */}
@@ -157,64 +239,23 @@ export default function Settings() {
                     <div className="space-y-8">
                       <div className="grid md:grid-cols-2 gap-8">
                         <label className="block">
-                          <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] block mb-3 px-1">System Identifier</span>
-                          <input type="text" value={form.system_name} onChange={e => setForm({...form, system_name: e.target.value})}
-                            className="w-full px-5 py-4 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900 dark:text-white transition-all" />
-                        </label>
-                        <label className="block">
-                          <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] block mb-3 px-1">Language</span>
-                          <select value={form.system_language} onChange={e => setForm({...form, system_language: e.target.value})}
+                          <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] block mb-3 px-1">Date Format</span>
+                          <select value={form.date_format} onChange={e => setForm({...form, date_format: e.target.value})}
                             className="w-full px-5 py-4 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900 dark:text-white transition-all">
-                            <option>Bahasa Indonesia</option>
-                            <option>English (US)</option>
-                          </select>
-                        </label>
-                      </div>
-                      
-                      <div className="p-8 bg-gray-50/50 dark:bg-slate-800/30 rounded-3xl border border-dashed border-gray-200 dark:border-slate-700">
-                        <h3 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-widest mb-6 flex items-center gap-2">
-                           <Activity className="w-4 h-4 text-emerald-500" /> Maintenance Schedule
-                        </h3>
-                        <ToggleSwitch 
-                          label="Auto-Restart Service" 
-                          sublabel="Daily at 03:00 AM for optimization"
-                          checked={form.auto_restart}
-                          onChange={v => setForm({...form, auto_restart: v})}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {activeTab === 'ai' && (
-                    <div className="space-y-8">
-                      <div className="grid md:grid-cols-2 gap-8">
-                        <label className="block">
-                          <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] block mb-3 px-1">Confidence Threshold</span>
-                          <select value={form.ai_sensitivity} onChange={e => setForm({...form, ai_sensitivity: e.target.value})}
-                            className="w-full px-5 py-4 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900 dark:text-white">
-                            <option>Low (0.35)</option>
-                            <option>Medium (0.50)</option>
-                            <option>High (0.75)</option>
+                            <option>DD/MM/YYYY</option>
+                            <option>MM/DD/YYYY</option>
+                            <option>YYYY/MM/DD</option>
                           </select>
                         </label>
                         <label className="block">
-                          <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] block mb-3 px-1">AI Model Engine</span>
-                          <select value={form.ai_model} onChange={e => setForm({...form, ai_model: e.target.value})}
-                            className="w-full px-5 py-4 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900 dark:text-white">
-                            <option>YOLOv8-N (Fastest)</option>
-                            <option>YOLOv8-M (Balanced)</option>
-                            <option>YOLOv8-X (Most Accurate)</option>
+                          <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] block mb-3 px-1">Time Zone</span>
+                          <select value={form.time_zone} onChange={e => setForm({...form, time_zone: e.target.value})}
+                            className="w-full px-5 py-4 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900 dark:text-white transition-all">
+                            <option>(UTC+07:00) Bangkok, Hanoi, Jakarta</option>
+                            <option>(UTC+08:00) Kuala Lumpur, Singapore</option>
+                            <option>(UTC+09:00) Tokyo, Seoul</option>
                           </select>
                         </label>
-                      </div>
-
-                      <div className="space-y-4">
-                        <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] block px-1">Active Class Detection</span>
-                        <div className="grid md:grid-cols-2 gap-4">
-                          <ToggleSwitch label="Vehicle Detection" checked={form.detect_vehicles} onChange={v => setForm({...form, detect_vehicles: v})} />
-                          <ToggleSwitch label="Person Detection" checked={form.detect_persons} onChange={v => setForm({...form, detect_persons: v})} />
-                          <ToggleSwitch label="Parking Violation" checked={form.detect_parking_violation} onChange={v => setForm({...form, detect_parking_violation: v})} />
-                        </div>
                       </div>
                     </div>
                   )}
@@ -224,26 +265,35 @@ export default function Settings() {
                        <div className="p-8 bg-slate-900 rounded-3xl border border-slate-800 text-white relative overflow-hidden">
                          <div className="flex justify-between items-center mb-4">
                             <span className="text-xs font-black uppercase tracking-widest text-emerald-500">Storage Usage</span>
-                            <span className="text-lg font-black tracking-tight">342GB / 500GB</span>
+                            <span className="text-lg font-black tracking-tight">0GB / {form.storage_quota}</span>
                          </div>
                          <div className="h-3 w-full bg-slate-800 rounded-full overflow-hidden">
-                            <div className="h-full bg-emerald-500 rounded-full" style={{ width: '68%' }}></div>
+                            <div className="h-full bg-emerald-500 rounded-full transition-all duration-1000" style={{ width: '0%' }}></div>
                          </div>
                        </div>
 
                        <div className="grid md:grid-cols-2 gap-8">
                           <label className="block">
                             <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] block mb-3 px-1">Retention Period (Days)</span>
-                            <input type="number" value={form.retention_days} onChange={e => setForm({...form, retention_days: parseInt(e.target.value)})}
-                              className="w-full px-5 py-4 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900 dark:text-white" />
+                            <input type="number" value={form.retention_days} onChange={e => setForm({...form, retention_days: parseInt(e.target.value) || 0})}
+                              className="w-full px-5 py-4 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900 dark:text-white transition-all" />
                           </label>
                           <label className="block">
                             <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] block mb-3 px-1">Recording Mode</span>
                             <select value={form.recording_mode} onChange={e => setForm({...form, recording_mode: e.target.value})}
-                              className="w-full px-5 py-4 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900 dark:text-white">
+                              className="w-full px-5 py-4 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900 dark:text-white transition-all">
                               <option>Continuous</option>
                               <option>Motion Only</option>
-                              <option>AI Trigger Only</option>
+                            </select>
+                          </label>
+                          <label className="block md:col-span-2">
+                            <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] block mb-3 px-1">Storage Quota</span>
+                            <select value={form.storage_quota} onChange={e => setForm({...form, storage_quota: e.target.value})}
+                              className="w-full px-5 py-4 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900 dark:text-white transition-all">
+                              <option>500GB</option>
+                              <option>1TB</option>
+                              <option>2TB</option>
+                              <option>5TB</option>
                             </select>
                           </label>
                        </div>
@@ -251,7 +301,16 @@ export default function Settings() {
                     </div>
                   )}
 
-                  {activeTab === 'security' && (
+                  {activeTab === 'alerts' && (
+                    <div className="space-y-8">
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <ToggleSwitch label="Email Alerts" checked={form.email_alerts} onChange={v => setForm({...form, email_alerts: v})} />
+                        <ToggleSwitch label="Push Notifications" checked={form.push_notifications} onChange={v => setForm({...form, push_notifications: v})} />
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === 'network' && (
                     <div className="space-y-8">
                        <div className="bg-gray-50/50 dark:bg-slate-800/30 p-8 rounded-3xl border border-gray-100 dark:border-slate-800">
                          <h3 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-widest mb-6 flex items-center gap-2">
@@ -280,13 +339,9 @@ export default function Settings() {
                              className="w-full px-5 py-4 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-gray-900 dark:text-white transition-all" />
                          </label>
                          <label className="block">
-                           <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] block mb-3 px-1">Session Timeout</span>
-                           <select value={form.session_timeout} onChange={e => setForm({...form, session_timeout: e.target.value})}
-                             className="w-full px-5 py-4 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900 dark:text-white">
-                             <option>15 min</option>
-                             <option>60 min</option>
-                             <option>Never</option>
-                           </select>
+                           <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] block mb-3 px-1">Server Port</span>
+                           <input type="text" value={form.port} onChange={e => setForm({...form, port: e.target.value})}
+                             className="w-full px-5 py-4 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-gray-900 dark:text-white transition-all" />
                          </label>
                        </div>
                     </div>
@@ -324,19 +379,20 @@ export default function Settings() {
                 <X className="w-6 h-6 text-gray-400" />
               </button>
             </div>
-            <form onSubmit={(e) => { e.preventDefault(); setIsPasswordModalOpen(false); showToast('Admin access key updated', 'success'); }} className="p-10 space-y-6">
+            <form onSubmit={handlePasswordChange} className="p-10 space-y-6">
               <div>
                 <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3 px-1">Old Password</label>
-                <input type="password" required className="w-full px-5 py-4 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900 dark:text-white" />
+                <input type="password" required value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} disabled={passwordLoading} className="w-full px-5 py-4 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900 dark:text-white" />
               </div>
               <div className="grid grid-cols-1 gap-6">
                 <div>
                   <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3 px-1">New Access Key</label>
-                  <input type="password" required className="w-full px-5 py-4 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900 dark:text-white" />
+                  <input type="password" required value={newPassword} onChange={(e) => setNewPassword(e.target.value)} disabled={passwordLoading} className="w-full px-5 py-4 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900 dark:text-white" />
                 </div>
               </div>
               <div className="pt-6">
-                <button type="submit" className="w-full py-5 bg-emerald-500 text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl hover:bg-emerald-600 transition-all shadow-xl shadow-emerald-500/20 active:scale-95">
+                <button type="submit" disabled={passwordLoading} className="w-full py-5 bg-emerald-500 text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl hover:bg-emerald-600 transition-all shadow-xl shadow-emerald-500/20 active:scale-95 disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2">
+                  {passwordLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : null}
                   Update Credentials
                 </button>
               </div>

@@ -83,6 +83,29 @@ export class AuthService {
       message: 'Recovery instructions sent',
     };
   }
+
+  changePassword(userId: number, oldPassword: unknown, newPassword: unknown): { success: true } {
+    if (typeof oldPassword !== 'string' || oldPassword.length === 0) {
+      throw new AppError('Old password is required', 400);
+    }
+    if (typeof newPassword !== 'string' || newPassword.length < 6) {
+      throw new AppError('New password must be at least 6 characters', 400);
+    }
+
+    const user = this.authRepository.findById(userId);
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    if (!bcrypt.compareSync(oldPassword, user.password)) {
+      throw new AppError('Invalid old password', 401);
+    }
+
+    const hashedPassword = bcrypt.hashSync(newPassword, 10);
+    this.authRepository.updatePassword(userId, hashedPassword);
+
+    return { success: true };
+  }
 }
 
 export const authService = new AuthService(new AuthRepository());

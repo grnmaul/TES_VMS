@@ -13,6 +13,10 @@ export interface SettingsRecord {
   email_alerts: number;
   push_notifications: number;
   alert_sensitivity: string;
+  storage_quota: string;
+  retention_days: number;
+  auto_purge: number;
+  recording_mode: string;
 }
 
 export class SettingsRepository {
@@ -32,7 +36,11 @@ export class SettingsRepository {
           port,
           email_alerts,
           push_notifications,
-          alert_sensitivity
+          alert_sensitivity,
+          storage_quota,
+          retention_days,
+          auto_purge,
+          recording_mode
         FROM system_settings WHERE id = 1`
       )
       .get() as SettingsRecord;
@@ -53,7 +61,11 @@ export class SettingsRepository {
            port = ?,
            email_alerts = ?,
            push_notifications = ?,
-           alert_sensitivity = ?
+           alert_sensitivity = ?,
+           storage_quota = ?,
+           retention_days = ?,
+           auto_purge = ?,
+           recording_mode = ?
        WHERE id = 1`
     ).run(
       payload.system_language,
@@ -67,7 +79,11 @@ export class SettingsRepository {
       payload.port,
       payload.email_alerts,
       payload.push_notifications,
-      payload.alert_sensitivity
+      payload.alert_sensitivity,
+      payload.storage_quota,
+      payload.retention_days,
+      payload.auto_purge,
+      payload.recording_mode
     );
 
     return this.getSettings();

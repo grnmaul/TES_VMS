@@ -3,9 +3,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, RefreshCw, Camera as CameraIcon, MapPin, Menu, X, Brain, Activity, TrendingUp, BarChart3, Car, Bike, Truck, Bus as BusIcon } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Camera as CameraIcon, MapPin, Menu, X, Brain, Activity, TrendingUp, BarChart3, Car, Bike, Truck, Bus as BusIcon, Flag } from 'lucide-react';
 import { useRealtime } from '@/src/lib/useRealtime';
 import YoloDetector, { VehicleStats } from '@/src/components/YoloDetector';
+import ReportModal from '@/src/components/ReportModal';
+import { useAuth } from '@/src/context/AuthContext';
 
 interface CameraData {
   id: number; name: string; location: string; status: string; stream_url?: string;
@@ -49,11 +51,13 @@ function CircularGauge({ value, max = 100, color, label, sublabel }: {
 export default function LiveStream() {
   const params = useParams();
   const id = params?.id;
+  const { token } = useAuth();
   const [cameras, setCameras] = useState<CameraData[]>([]);
   const [selectedCamera, setSelectedCamera] = useState<CameraData | null>(null);
   const [isListOpen, setIsListOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isAiEnabled, setIsAiEnabled] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentStats, setCurrentStats] = useState<VehicleStats>({ motorcycle:0,car:0,bus:0,truck:0,total:0 });
   const [sessionCounts, setSessionCounts] = useState<VehicleStats>({ motorcycle:0,car:0,bus:0,truck:0,total:0 });
@@ -216,8 +220,18 @@ export default function LiveStream() {
                       <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${isAiEnabled ? 'text-emerald-500' : 'text-gray-400'}`}>On</span>
                     </div>
 
-                    <button onClick={reloadStream} className="p-2.5 bg-gray-50 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-xl text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all">
+                    <button onClick={reloadStream} className="p-2.5 bg-gray-50 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-xl text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all" title="Muat ulang stream">
                       <RefreshCw className="w-3.5 h-3.5" />
+                    </button>
+
+                    <button
+                      onClick={() => setIsReportOpen(true)}
+                      disabled={!selectedCamera}
+                      className="flex items-center gap-1.5 px-3 py-2.5 bg-red-50 dark:bg-red-500/10 hover:bg-red-500 rounded-xl text-red-500 dark:text-red-400 hover:text-white transition-all group disabled:opacity-40 disabled:cursor-not-allowed"
+                      title="Laporkan masalah pada kamera ini"
+                    >
+                      <Flag className="w-3.5 h-3.5" />
+                      <span className="text-[9px] font-black uppercase tracking-wider hidden sm:block">Laporan</span>
                     </button>
                   </div>
                 </div>
@@ -233,6 +247,17 @@ export default function LiveStream() {
                 </div>
               </div>
             </div>
+
+            {/* Report Modal */}
+            {selectedCamera && (
+              <ReportModal
+                isOpen={isReportOpen}
+                onClose={() => setIsReportOpen(false)}
+                cameraId={selectedCamera.id}
+                cameraName={selectedCamera.name}
+                token={token}
+              />
+            )}
 
             {/* Right Column: Density & Classification */}
             <div className="lg:col-span-4 xl:col-span-3 space-y-4">
