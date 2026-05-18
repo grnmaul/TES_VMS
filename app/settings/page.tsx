@@ -1,6 +1,6 @@
 'use client';
 
-import Settings from '@/src/pages/Settings';
+import Settings from '@/src/views/Settings';
 import Sidebar from '@/src/components/Sidebar';
 import RequireAuth from '@/src/components/RequireAuth';
 

@@ -1,8 +1,8 @@
 'use client';
 
 import { useAuth } from '@/src/context/AuthContext';
-import Dashboard from '@/src/pages/Dashboard';
-import UserDashboard from '@/src/pages/UserDashboard';
+import Dashboard from '@/src/views/Dashboard';
+import UserDashboard from '@/src/views/UserDashboard';
 import Sidebar from '@/src/components/Sidebar';
 import RequireAuth from '@/src/components/RequireAuth';
 

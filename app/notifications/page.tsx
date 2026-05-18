@@ -1,6 +1,6 @@
 'use client';
 
-import NotificationCenter from '@/src/pages/NotificationCenter';
+import NotificationCenter from '@/src/views/NotificationCenter';
 import Sidebar from '@/src/components/Sidebar';
 import RequireAuth from '@/src/components/RequireAuth';
 

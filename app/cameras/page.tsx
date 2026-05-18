@@ -1,6 +1,6 @@
 'use client';
 
-import CameraManagement from '@/src/pages/CameraManagement';
+import CameraManagement from '@/src/views/CameraManagement';
 import Sidebar from '@/src/components/Sidebar';
 import RequireAuth from '@/src/components/RequireAuth';
 

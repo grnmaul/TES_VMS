@@ -1,6 +1,6 @@
 'use client';
 
-import LiveStream from '@/src/pages/LiveStream';
+import LiveStream from '@/src/views/LiveStream';
 import Sidebar from '@/src/components/Sidebar';
 import RequireAuth from '@/src/components/RequireAuth';
 

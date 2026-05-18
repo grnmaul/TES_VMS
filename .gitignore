@@ -13,3 +13,4 @@ vms.db
 vms.db-journal
 bin/go2rtc.yaml
 go2rtc.yaml
+*.tsbuildinfo
