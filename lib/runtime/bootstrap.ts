@@ -12,8 +12,16 @@ export function ensureRuntimeBootstrapped() {
     storagePurgeService.start();
   }
   
-  // Always ensure server is up and cameras are synced
-  syncCamerasToGo2rtc();
+  // Selalu pastikan go2rtc berjalan (jika mati/ter-interrupt, langsung spawn lagi)
+  go2rtcService.startServer();
+
+  // Batasi sync ke go2rtc maksimal 1x per 30 detik agar tidak spam write yaml
+  const now = Date.now();
+  const lastSync: number = (globalThis as any).__lastGo2rtcSync || 0;
+  if (now - lastSync > 30_000) {
+    (globalThis as any).__lastGo2rtcSync = now;
+    syncCamerasToGo2rtc();
+  }
 }
 
 async function syncCamerasToGo2rtc() {

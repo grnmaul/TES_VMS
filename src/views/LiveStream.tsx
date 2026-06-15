@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, RefreshCw, Camera as CameraIcon, MapPin, Menu, X, Brain, Activity, TrendingUp, BarChart3, Car, Bike, Truck, Bus as BusIcon, Flag } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Camera as CameraIcon, MapPin, Menu, X, Brain, Activity, TrendingUp, Car, Bike, Truck, Bus as BusIcon, Flag } from 'lucide-react';
 import { useRealtime } from '@/src/lib/useRealtime';
 import YoloDetector, { VehicleStats } from '@/src/components/YoloDetector';
 import ReportModal from '@/src/components/ReportModal';
@@ -200,18 +200,25 @@ export default function LiveStream() {
             {/* Left Column: Video */}
             <div className="lg:col-span-8 xl:col-span-9">
               <div className="bg-white dark:bg-slate-900 rounded-[32px] overflow-hidden border border-gray-100 dark:border-slate-800 shadow-sm transition-colors group">
-                <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between">
+                {/* Header */}
+                <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
-                    <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
+                    <div className="w-2.5 h-2.5 rounded-full animate-pulse bg-red-500" />
                     <div>
-                      <p className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-tight">{selectedCamera?.name || 'Menunggu...'}</p>
-                      <p className="text-[9px] font-bold text-gray-400 uppercase">{new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})}</p>
+                      <p className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-tight">
+                        {selectedCamera?.name || 'Menunggu...'}
+                      </p>
+                      <p className="text-[9px] font-bold text-gray-400 uppercase">
+                        {new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})}
+                      </p>
                     </div>
                   </div>
+
                   <div className="flex items-center gap-6">
+                    {/* AI Toggle */}
                     <div className="flex items-center gap-3">
                       <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${!isAiEnabled ? 'text-red-500' : 'text-gray-400'}`}>Off</span>
-                      <button 
+                      <button
                         onClick={() => setIsAiEnabled(!isAiEnabled)}
                         className={`relative w-10 h-5 rounded-full transition-all duration-300 ${isAiEnabled ? 'bg-emerald-500 shadow-lg shadow-emerald-500/20' : 'bg-gray-200 dark:bg-slate-700'}`}
                       >
@@ -235,6 +242,7 @@ export default function LiveStream() {
                     </button>
                   </div>
                 </div>
+
                 <div className="aspect-video bg-slate-900 relative">
                   {selectedCamera && (
                     <YoloDetector

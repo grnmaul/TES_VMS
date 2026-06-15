@@ -1,199 +1,221 @@
+api:
+  listen: ":1984"
+
+rtsp:
+  listen: ":8554"
+
+webrtc:
+  listen: ":8555/tcp"
+  candidates:
+    - 127.0.0.1
+    - localhost
+    - 169.254.224.178
+    - 169.254.118.104
+    - 10.10.14.242
+    - 10.11.15.223
+  ice_servers:
+    - urls:
+        - stun:stun.l.google.com:19302
+        - stun:stun1.l.google.com:19302
+        - stun:stun2.l.google.com:19302
+
+stream:
+  origin_timeout: 60s
+
 streams:
   camera-8:
-    - rtsp://streaming:Streaming2025@10.10.122.170:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.170:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-9:
-    - rtsp://admin:kominfo123%23@10.99.94.66:554
+    - rtsp://admin:kominfo123%23@10.99.94.66:554#input=rtsp/tcp#timeout=30#backchannel=0
   camera-10:
-    - rtsp://streaming:Streaming2025@10.10.122.154:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.154:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-11:
-    - rtsp://streaming:Streaming2025@10.10.122.197:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.197:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-12:
-    - rtsp://streaming:Streaming2025@10.10.123.4:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.123.4:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-13:
-    - rtsp://streaming:Streaming2025@10.10.122.77:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.77:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-14:
-    - rtsp://streaming:Streaming2025@10.10.123.29:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.123.29:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-15:
-    - rtsp://streaming:Streaming2025@10.10.123.28:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.123.28:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-16:
-    - rtsp://admin:@Kominfo2025@10.10.122.189:554/
+    - rtsp://admin:@Kominfo2025@10.10.122.189:554/#input=rtsp/tcp#timeout=30#backchannel=0
   camera-18:
-    - rtsp://streaming:Streaming2025@10.10.122.158:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.158:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-19:
-    - rtsp://streaming:Streaming2025@10.10.123.33:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.123.33:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-20:
-    - rtsp://streaming:Streaming2025@10.10.122.57:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.57:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-21:
-    - rtsp://streaming:Streaming2025@10.10.122.218:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.218:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-22:
-    - rtsp://streaming:Streaming2025@10.10.122.145:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.145:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-23:
-    - rtsp://stream:Kominfo12@10.10.123.9:554/Streaming/Channels/102
+    - rtsp://stream:Kominfo12@10.10.123.9:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-24:
-    - rtsp://streaming:Streaming2025@10.10.122.226:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.226:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-25:
-    - rtsp://streaming:Streaming2025@10.10.122.67:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.67:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-26:
-    - rtsp://streaming:Streaming2025@10.10.123.65:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.123.65:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-27:
-    - rtsp://streaming:Streaming2025@10.10.123.6:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.123.6:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-28:
-    - rtsp://streaming:Streaming2025@10.10.123.35:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.123.35:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-29:
-    - rtsp://streaming:Streaming2025@10.10.122.214:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.214:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-30:
-    - rtsp://streaming:Streaming2025@10.99.96.162:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.99.96.162:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-31:
-    - rtsp://streaming:Streaming2025@10.10.122.211:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.211:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-32:
-    - rtsp://streaming:Streaming2025@10.10.122.249:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.249:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-34:
-    - rtsp://streaming:Streaming2025@10.10.123.3:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.123.3:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-35:
-    - rtsp://streaming:Streaming2025@10.10.123.10:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.123.10:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-36:
-    - rtsp://streaming:Streaming2025@10.10.123.64:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.123.64:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-37:
-    - rtsp://streaming:Streaming2025@10.10.122.34:554/
+    - rtsp://streaming:Streaming2025@10.10.122.34:554/#input=rtsp/tcp#timeout=30#backchannel=0
   camera-40:
-    - rtsp://streaming:Streaming2025@10.10.123.54:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.123.54:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-41:
-    - rtsp://streaming:Streaming2025@10.10.122.219:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.219:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-42:
-    - rtsp://streaming:Streaming2025@10.10.123.36:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.123.36:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-43:
-    - rtsp://streaming:Streaming2025@10.10.122.241:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.241:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-44:
-    - rtsp://streaming:Streaming2025@10.10.122.160:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.160:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-45:
-    - rtsp://streaming:Streaming2025@10.10.123.63:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.123.63:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-46:
-    - rtsp://streaming:Streaming2025@10.10.123.27:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.123.27:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-47:
-    - rtsp://streaming:Streaming2025@10.10.123.7:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.123.7:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-48:
-    - rtsp://streaming:Streaming2025@10.10.122.55:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.55:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-49:
-    - rtsp://admin:Dishub2024@10.10.122.232:554/Streaming/Channels/102
+    - rtsp://admin:Dishub2024@10.10.122.232:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-50:
-    - rtsp://streaming:Streaming2025@10.10.122.53:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.53:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-51:
-    - rtsp://streaming:Streaming2025@10.10.122.213:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.213:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-54:
-    - rtsp://admin:@Kominfo2025@10.10.122.187:554/
+    - rtsp://admin:@Kominfo2025@10.10.122.187:554/#input=rtsp/tcp#timeout=30#backchannel=0
   camera-56:
-    - rtsp://streaming:Streaming2025@10.10.122.3:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.3:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-57:
-    - rtsp://streaming:Streaming2025@10.10.122.59:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.59:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-58:
-    - rtsp://streaming:Streaming2025@10.10.122.34:554
+    - rtsp://streaming:Streaming2025@10.10.122.34:554#input=rtsp/tcp#timeout=30#backchannel=0
   camera-59:
-    - rtsp://streaming:Streaming2025@10.10.123.9:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.123.9:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-60:
-    - rtsp://streaming:Streaming2025@10.10.122.234:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.234:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-61:
-    - rtsp://stream:Streaming2025@10.10.122.184:554
+    - rtsp://stream:Streaming2025@10.10.122.184:554#input=rtsp/tcp#timeout=30#backchannel=0
   camera-62:
-    - rtsp://streaming:Streaming2025@10.10.122.71:554
+    - rtsp://streaming:Streaming2025@10.10.122.71:554#input=rtsp/tcp#timeout=30#backchannel=0
   camera-63:
-    - rtsp://streaming:Streaming2025@10.10.122.153:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.153:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-64:
-    - rtsp://streaming:Streaming2025@10.10.123.61:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.123.61:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-65:
-    - rtsp://streaming:Streaming2025@10.10.122.171:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.171:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-66:
-    - rtsp://streaming:Streaming2025@10.10.123.34:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.123.34:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-67:
-    - rtsp://streaming:Streaming2025@10.10.123.8:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.123.8:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-68:
-    - rtsp://streaming:Streaming2025@10.10.122.246:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.246:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-69:
-    - rtsp://streaming:Streaming2025@10.99.96.50:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.99.96.50:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-70:
-    - rtsp://streaming:Streaming2025@10.10.122.243:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.243:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-71:
-    - rtsp://streaming:Streaming2025@10.10.123.52:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.123.52:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-72:
-    - rtsp://streaming:Streaming2025@10.10.123.6:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.123.6:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-73:
-    - rtsp://streaming:Streaming2025@10.10.122.153:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.153:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-74:
-    - rtsp://streaming:Streaming2025@10.10.122.144:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.144:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-75:
-    - rtsp://streaming:Streaming2025@10.10.122.30:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.30:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-76:
-    - rtsp://streaming:Streaming2025@10.10.122.239:554/Streaming/Channels/201/
+    - rtsp://streaming:Streaming2025@10.10.122.239:554/Streaming/Channels/201/#input=rtsp/tcp#timeout=30#backchannel=0
   camera-77:
-    - rtsp://streaming:Streaming2025@10.10.122.34:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.34:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-78:
-    - rtsp://streaming:StreamMadiunK0t4@10.10.122.209:554/Streaming/Channels/102
+    - rtsp://streaming:StreamMadiunK0t4@10.10.122.209:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-79:
-    - rtsp://streaming:Streaming2025@10.10.122.219:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.219:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-80:
-    - rtsp://streaming:Streaming2025@10.10.122.157:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.157:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
+  camera-81:
+    - rtsp://streaming:Streaming2025@10.10.122.238:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-82:
-    - rtsp://streaming:Streaming2025@10.10.123.60:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.123.60:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-83:
-    - rtsp://streaming:Streaming2025@10.10.122.32:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.32:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-84:
-    - rtsp://streaming:Streaming2025@10.10.123.53:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.123.53:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-85:
-    - rtsp://streaming:Streaming2025@10.10.123.53:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.123.53:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-86:
-    - rtsp://streaming:Streaming2025@10.99.96.51:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.99.96.51:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-87:
-    - rtsp://streaming:Streaming2025@10.10.122.23:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.23:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-88:
-    - rtsp://streaming:Streaming2025@10.10.122.156:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.156:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-89:
-    - rtsp://stream:kominfo1@10.10.122.190:554/Streaming/Channels/102
+    - rtsp://stream:kominfo1@10.10.122.190:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-90:
-    - rtsp://stream:kotamadiun2@10.10.122.4:554
+    - rtsp://stream:kotamadiun2@10.10.122.4:554#input=rtsp/tcp#timeout=30#backchannel=0
   camera-91:
-    - rtsp://streaming:Streaming2025@10.10.122.50:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.50:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-92:
-    - rtsp://streaming:Streaming2025@10.10.253.20:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.253.20:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-93:
-    - rtsp://streaming:Streaming2025@10.10.122.21:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.21:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-94:
-    - rtsp://streaming:Streaming2025@10.10.122.68:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.68:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-95:
-    - rtsp://streaming:Streaming2025@10.10.122.29:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.29:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-96:
-    - rtsp://streaming:Streaming2025@10.10.123.26:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.123.26:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-97:
-    - rtsp://streaming:Streaming2025@10.10.122.149:554
+    - rtsp://streaming:Streaming2025@10.10.122.149:554#input=rtsp/tcp#timeout=30#backchannel=0
   camera-98:
-    - rtsp://streaming:Streaming2025@10.10.122.182:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.182:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-99:
-    - rtsp://streaming:Streaming2025@10.7.7.15:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.7.7.15:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-100:
-    - rtsp://streaming:Streaming2025@10.10.122.28:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.28:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-101:
-    - rtsp://streaming:Streaming2025@10.10.122.145:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.145:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-102:
-    - rtsp://stream:Kominfo1@10.10.122.217:554/Streaming/Channels/102
-  camera-103:
-    - rtsp://streaming:Streaming2025@10.10.123.25:554/Streaming/Channels/102
+    - rtsp://stream:Kominfo1@10.10.122.217:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-104:
-    - rtsp://streaming:Streaming2025@10.10.122.244:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.244:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-105:
-    - rtsp://streaming:Streaming2025@10.10.122.242:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.242:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-106:
-    - rtsp://streaming:Streaming2025@10.10.123.11:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.123.11:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-107:
-    - rtsp://streaming:Streaming2025@10.10.122.41:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.41:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-108:
-    - rtsp://streaming:Streaming2025@10.10.122.218:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.218:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-109:
-    - rtsp://streaming:Streaming2025@10.10.122.64:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.64:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-110:
-    - rtsp://streaming:Streaming2025@10.10.122.201:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.201:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-111:
-    - rtsp://streaming:Streaming2025@10.10.122.213:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.213:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-112:
-    - rtsp://streaming:Streaming2025@10.10.122.51:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.51:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0
   camera-113:
-    - rtsp://streaming:Streaming2025@10.10.122.5:554/Streaming/Channels/102
-  camera-114:
-    - rtsp://streaming:Streaming2025@10.10.122.223:554/Streaming/Channels/102
+    - rtsp://streaming:Streaming2025@10.10.122.5:554/Streaming/Channels/102#input=rtsp/tcp#timeout=30#backchannel=0

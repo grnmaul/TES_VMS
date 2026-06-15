@@ -280,13 +280,15 @@ export default function YoloDetector({ cameraId, aiEnabled = false, onDetection,
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef  = useRef<HTMLVideoElement>(null);
   const modelRef  = useRef<any>(null);
-  const peerRef   = useRef<RTCPeerConnection | null>(null);
-  const rafRef    = useRef<number | null>(null);
-  const lastTsRef = useRef(0);
-  const mountRef  = useRef(true);
-  const lastSaveRef = useRef(0);
-  const trackerRef = useRef(new MaxTracker());
+  const peerRef      = useRef<RTCPeerConnection | null>(null);
+  const rafRef       = useRef<number | null>(null);
+  const lastTsRef    = useRef(0);
+  const mountRef     = useRef(true);
+  const lastSaveRef  = useRef(0);
+  const trackerRef   = useRef(new MaxTracker());
   const containerRef = useRef<HTMLDivElement>(null);
+  // Ref untuk aiEnabled agar detectLoop tidak perlu di-recreate saat toggle
+  const aiEnabledRef = useRef(aiEnabled);
 
   const toggleFullscreen = () => {
     if (!containerRef.current) return;
@@ -296,6 +298,9 @@ export default function YoloDetector({ cameraId, aiEnabled = false, onDetection,
       document.exitFullscreen();
     }
   };
+
+  // Selalu sinkronkan ref dengan prop terbaru
+  useEffect(() => { aiEnabledRef.current = aiEnabled; }, [aiEnabled]);
 
   // ── 1. Load COCO-SSD (sekali saja per mount) ──────────────────────────────
   const loadModel = useCallback(async (): Promise<boolean> => {
@@ -314,9 +319,21 @@ export default function YoloDetector({ cameraId, aiEnabled = false, onDetection,
   const connectWebRTC = useCallback(async (): Promise<boolean> => {
     try {
       if (peerRef.current) { peerRef.current.close(); peerRef.current = null; }
+      if (videoRef.current?.srcObject) {
+        const s = videoRef.current.srcObject as MediaStream;
+        s.getTracks().forEach(t => t.stop());
+        videoRef.current.srcObject = null;
+      }
 
       const pc = new RTCPeerConnection({
-        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun2.l.google.com:19302' },
+        ],
+        iceTransportPolicy: 'all',
+        bundlePolicy: 'max-bundle',
+        rtcpMuxPolicy: 'require',
       });
       peerRef.current = pc;
 
@@ -328,18 +345,30 @@ export default function YoloDetector({ cameraId, aiEnabled = false, onDetection,
         }
       };
 
+      // Tidak ada auto-reconnect — biarkan koneksi hidup alami.
+      // Kalau 'disconnected', WebRTC self-recover.
+      // Kalau 'failed', tampilkan no-stream — user bisa klik refresh manual.
+      pc.onconnectionstatechange = () => {
+        const state = pc.connectionState;
+        console.log(`[YOLO] WebRTC state: ${state}`);
+        if (state === 'failed' && mountRef.current) {
+          setStatus('no-stream');
+        }
+      };
+
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
-      // Tunggu ICE gathering (max 3 detik)
+      // Tunggu ICE gathering (max 3 detik — localhost tidak butuh lama)
       await new Promise<void>((resolve) => {
         if (pc.iceGatheringState === 'complete') { resolve(); return; }
-        pc.addEventListener('icegatheringstatechange', function handler() {
+        const handler = () => {
           if (pc.iceGatheringState === 'complete') {
             pc.removeEventListener('icegatheringstatechange', handler);
             resolve();
           }
-        });
+        };
+        pc.addEventListener('icegatheringstatechange', handler);
         setTimeout(resolve, 3000);
       });
 
@@ -363,6 +392,8 @@ export default function YoloDetector({ cameraId, aiEnabled = false, onDetection,
   }, [cameraId]);
 
   // ── 3. Loop deteksi (berjalan setiap ~intervalMs ms) ─────────────────────
+  // PENTING: aiEnabled dibaca dari REF bukan dari closure, agar loop tidak
+  // perlu di-recreate (dan di-cancel) setiap kali toggle AI ditekan.
   const detectLoop = useCallback(() => {
     if (!mountRef.current) return;
 
@@ -375,11 +406,14 @@ export default function YoloDetector({ cameraId, aiEnabled = false, onDetection,
       return;
     }
 
-    if (!aiEnabled) {
+    // Tandai video sebagai aktif saat frame sudah diterima
+    setStatus('active');
+
+    if (!aiEnabledRef.current) {
+      // AI off: tidak perlu loop RAF sama sekali, hemat CPU
       const ctx = canvas.getContext('2d');
       if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
-      setStatus('active');
-      rafRef.current = requestAnimationFrame(detectLoop);
+      setLiveCounts({ motorcycle: 0, car: 0, bus: 0, truck: 0, total: 0 });
       return;
     }
 
@@ -446,7 +480,6 @@ export default function YoloDetector({ cameraId, aiEnabled = false, onDetection,
       const stats = buildStats(filtered);
       if (!mountRef.current) return;
 
-      setStatus('active');
       setLiveCounts(stats);
       onDetection?.(stats, filtered);
 
@@ -460,7 +493,7 @@ export default function YoloDetector({ cameraId, aiEnabled = false, onDetection,
           body: JSON.stringify({
             camera_id: cameraId,
             detected_objects: filtered.map((p) => ({ class: p.class, score: p.score })),
-            person_count: 0, // Dihapus sesuai permintaan
+            person_count: 0,
             vehicle_count: stats.total,
             confidence: avg,
           }),
@@ -471,20 +504,22 @@ export default function YoloDetector({ cameraId, aiEnabled = false, onDetection,
     }).catch(() => {
       if (mountRef.current) rafRef.current = requestAnimationFrame(detectLoop);
     });
-  }, [cameraId, aiEnabled, intervalMs, onDetection]); // Added aiEnabled here
+  // aiEnabled SENGAJA tidak dimasukkan ke sini — dibaca via aiEnabledRef
+  }, [cameraId, intervalMs, onDetection]);
 
   // ── 4. WebRTC Connection (Hanya bergantung pada cameraId) ──────────────────
   useEffect(() => {
     mountRef.current = true;
 
-    (async () => {
+    const startConnection = async () => {
       setStatus('connecting');
       const connOk = await connectWebRTC();
       if (!mountRef.current) return;
-      if (!connOk) { setStatus('no-stream'); return; }
-      // We do not set status to 'active' here. 
-      // We let detectLoop set it to 'active' once the video actually receives frames (readyState >= 2).
-    })();
+      // Kalau gagal, tampilkan no-stream. Tidak ada auto-retry.
+      if (!connOk) setStatus('no-stream');
+    };
+
+    startConnection();
 
     return () => {
       mountRef.current = false;
@@ -511,7 +546,7 @@ export default function YoloDetector({ cameraId, aiEnabled = false, onDetection,
     }
   }, [aiEnabled, loadModel]);
 
-  // ── 6. Mulai Loop Deteksi ──────────────────────────────────────────────────
+  // ── 6. Mulai/Restart Loop Deteksi ──────────────────────────────────────────
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -530,7 +565,7 @@ export default function YoloDetector({ cameraId, aiEnabled = false, onDetection,
         cancelAnimationFrame(rafRef.current);
       }
     };
-  }, [detectLoop]);
+  }, [detectLoop, aiEnabled]);
 
   // ── Live clock ─────────────────────────────────────────────────────────────
   const [clock, setClock] = useState('');
@@ -572,7 +607,7 @@ export default function YoloDetector({ cameraId, aiEnabled = false, onDetection,
       <video
         ref={videoRef}
         autoPlay muted playsInline
-        className={`w-full h-full object-contain transition-opacity duration-700 ${status === 'active' ? 'opacity-100' : 'opacity-0'}`}
+        className="w-full h-full object-contain"
       />
 
       {/* Video Status Overlay (Visible when not active) */}

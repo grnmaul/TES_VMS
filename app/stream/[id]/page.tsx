@@ -1,12 +1,12 @@
 import { redirect } from 'next/navigation';
 
 interface StreamRedirectProps {
-  params: { id?: string };
+  params: Promise<{ id?: string }>;
 }
 
 // This is a server component so the redirect happens before the page is rendered.
-export default function StreamRedirect({ params }: StreamRedirectProps) {
-  const id = params?.id;
+export default async function StreamRedirect({ params }: StreamRedirectProps) {
+  const { id } = await params;
   if (id) {
     redirect(`/live-stream/${id}`);
   }
